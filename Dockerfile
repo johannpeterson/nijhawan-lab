@@ -6,9 +6,6 @@
 # TODO:
 # - resolve persmission & user issues
 # - get a better .profile...
-# Disable token auth for Jupyter:
-#   c.NotebookApp.token = ''
-#   c.NotebookApp.password = ''
 
 FROM broadinstitute/gatk:4.1.6.0
 
@@ -41,7 +38,7 @@ RUN groupadd $BIO_GROUP && \
 RUN mkdir $DATA_DIR && mkdir $SOURCE_DIR
 VOLUME $DATA_DIR $SOURCE_DIR
 
-COPY jupyter_notebook_config.py /root/.jupyter/
+COPY docker/jupyter_notebook_config.py /root/.jupyter/
 COPY provenance.sh /usr/local/bin/provenance
 
 # USER $BIO_USER

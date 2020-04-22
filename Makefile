@@ -1,2 +1,2 @@
-all	: Dockerfile jupyter_notebook_config.py
+all	: Dockerfile docker/jupyter_notebook_config.py
 	docker build -t nijhawanlab/tools:0.1 .
