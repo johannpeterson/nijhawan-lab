@@ -1,0 +1,10 @@
+*.log
+*.aux
+*.synctex
+*.gz
+*.zip
+.DS_Store
+\#*
+.#*
+
+stuff/*
