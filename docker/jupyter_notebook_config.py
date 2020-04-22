@@ -1,10 +1,11 @@
 # Configuration file for jupyter-notebook.
 
 # specific changes for nijhawanlab/tools docker image
-# generally dangerous settings
+# These are generally dangerous settings
 c.NotebookApp.allow_root = True
 c.NotebookApp.token = ''
 c.NotebookApp.notebook_dir = '/home/bio/source/notebooks/'
+c.NotebookApp.terminals_enabled = True
 
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
