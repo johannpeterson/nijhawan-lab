@@ -3,6 +3,7 @@
 *.synctex
 *.gz
 *.zip
+.env
 .DS_Store
 \#*
 .#*
