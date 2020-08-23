@@ -5,9 +5,13 @@
 
 # TODO:
 # - resolve persmission & user issues
-# - get a better .profile...
+# - get a better .profile with aliases, etc.
+# - install NCBI SRA toolkit - done?
+# - and NCBI datasets tool
 
-FROM broadinstitute/gatk:4.1.6.0
+FROM broadinstitute/gatk:4.1.8.1
+LABEL version="0.2"
+LABEL description="Tools for bioinformatics used by Nijhawan Lab, UTSW"
 
 ENV BIO_USER      bio
 ENV BIO_GROUP     bio
@@ -23,8 +27,37 @@ ENTRYPOINT ["jupyter", "notebook", "--allow-root", "--ip=0.0.0.0", "--no-browser
 #   packagename \
 #   && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y \
+    sra-toolkit \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /home/bio/requirements.txt
 RUN pip install --upgrade pip
-RUN pip install notebook
+RUN pip install -r /home/bio/requirements.txt
+# RUN pip install notebook \
+#     numpy \
+#     scipy \
+#     matplotlib \
+#     ipython \
+#     jupyter \
+#     pandas \
+#     sympy \
+#     nose
+# RUN pip install notebook 6.1.3 \
+#     numpy 1.17.5 \
+#     scipy 1.0.0 \
+#     matplotlib 3.2.1 \
+#     ipython 7.16.1 \
+#     jupyter 1.0.0 \
+#     pandas 1.0.3 \
+#     sympy 1.6.2 \
+#     nose 1.3.7 
+
+# install NCBI datasets utility
+WORKDIR /usr/bin
+RUN "curl -o datasets \
+         'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets'"
+RUN 'chmod +x datasets'
 
 # Jupyter notebook server port
 EXPOSE $JUPYTER_PORT

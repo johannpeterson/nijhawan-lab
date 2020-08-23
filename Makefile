@@ -1,2 +1,5 @@
+include .env
+
 all	: Dockerfile docker/jupyter_notebook_config.py
-	docker build -t nijhawanlab/tools:0.1 .
+	env $(cat .env | grep -v "#" | xargs)
+	docker build -t $(DOCKER_IMAGE) .
