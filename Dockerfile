@@ -1,4 +1,4 @@
-# docker build -t nijhawanlab/tools:0.1 .
+# docker build -t $DOCKER_IMAGE .
 
 # Running Jupyter in a Docker container:
 # https://github.com/ReproNim/neurodocker/issues/82
@@ -34,24 +34,6 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt /home/bio/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /home/bio/requirements.txt
-# RUN pip install notebook \
-#     numpy \
-#     scipy \
-#     matplotlib \
-#     ipython \
-#     jupyter \
-#     pandas \
-#     sympy \
-#     nose
-# RUN pip install notebook 6.1.3 \
-#     numpy 1.17.5 \
-#     scipy 1.0.0 \
-#     matplotlib 3.2.1 \
-#     ipython 7.16.1 \
-#     jupyter 1.0.0 \
-#     pandas 1.0.3 \
-#     sympy 1.6.2 \
-#     nose 1.3.7 
 
 # install NCBI datasets utility
 WORKDIR /usr/bin
