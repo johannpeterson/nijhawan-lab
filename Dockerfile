@@ -14,8 +14,8 @@
 # TODO:
 # - resolve persmission & user issues
 # - get a better .profile with aliases, etc.
+#     alias gtime=/usr/bin/time
 # - install NCBI SRA toolkit - done?
-# - and NCBI datasets tool - done?
 # - problems setting up sra-toolkit in Docker image:
 #     https://github.com/ncbi/sra-tools/issues/291
 #     https://hub.docker.com/r/ncbi/sra-tools
@@ -43,6 +43,7 @@ ENTRYPOINT ["jupyter", "notebook", "--allow-root", "--ip=0.0.0.0", "--no-browser
 RUN apt-get update && apt-get --quiet install -y \
     sra-toolkit \
     samtools \
+    bcftools \
     time uuid-runtime curl \
     && rm -rf /var/lib/apt/lists/*
 
