@@ -1,0 +1,7 @@
+## auto-generated configuration file - DO NOT EDIT ##
+
+/config/default = "false"
+/repository/remote/disabled = "false"
+/repository/user/cache-disabled = "false"
+/repository/user/default-path = "/data/ncbi"
+/repository/user/main/public/root = "/data/ncbi/public"
