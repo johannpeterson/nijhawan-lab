@@ -14,7 +14,7 @@ This reposity contains files required to build a Docker image containing GATK, J
 
         docker --version
         
-### Pull the Docker image
+### Pull the [Docker image](https://hub.docker.com/repository/docker/nijhawanlab/tools)
 
         docker pull nijhawanlab/tools:latest
 
