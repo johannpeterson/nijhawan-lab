@@ -9,3 +9,13 @@ sympy == 1.6.2
 nose == 1.3.7 
 xlrd == 1.2.0
 pysam == 0.16.0.1
+seaborn
+colored
+
+# spreadsheet I/O
+xlwt
+openpyxl
+
+# for Jupyter progress bars
+# https://towardsdatascience.com/ever-wanted-progress-bars-in-jupyter-bdb3988d9cfc
+tqdm
