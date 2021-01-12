@@ -5,6 +5,8 @@
 #   GATK
 #   samtools
 #   sra-toolkit
+#   bcftools
+#   bwa
 #   NCBI datasets utility
 #   Jupyter Notebooks
 
@@ -44,6 +46,7 @@ RUN apt-get update && apt-get --quiet install -y \
     sra-toolkit \
     samtools \
     bcftools \
+    bwa \
     time uuid-runtime curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -64,6 +67,12 @@ RUN pip install -r /home/bio/requirements.txt
 WORKDIR /usr/bin
 RUN ["curl", "-o", "datasets", "https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets"]
 RUN ["chmod", "+x", "datasets"]
+
+# install seqkit
+# https://bioinf.shenwei.me/seqkit/
+# https://github.com/shenwei356/seqkit/releases/download/v0.14.0/seqkit_linux_amd64.tar.gz
+RUN ["curl", "-o", "seqkit_linux_amd64.tar.gz",  "https://github.com/shenwei356/seqkit/releases/download/v0.14.0/seqkit_linux_amd64.tar.gz"]
+# unpack
 
 # Jupyter notebook server port
 EXPOSE $JUPYTER_PORT
