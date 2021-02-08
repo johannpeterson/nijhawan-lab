@@ -7,6 +7,11 @@ import itertools
 import re
 from tabulate import tabulate
 
+try:
+    from icecream import ic
+except ImportError:  # Graceful fallback if IceCream isn't installed.
+    ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
+
 #yesChoices = ["true","t","yes","y"]
 #noChoices = ["false","f","no","n"]
 
@@ -17,9 +22,17 @@ parser.add_argument("primer_filename", help="Primers file.")
 parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads", type=int, default=None)
 parser.add_argument("-r", "--rejected", help="Output read pairs that do not pass sanity checks (default no)", action="store_true")
 parser.add_argument("-u", "--unassigned", help="Output read pairs that are not assigned to a group (default no)", action="store_true")
+parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
 #parser.add_argument("-r", "--rejected", help="Output read pairs that do not pass sanity checks (default no).", type=str.lower, choices=yesChoices + noChoices, default="no")
 #parser.add_argument("-u", "--unassigned", help="Output read pairs that are not assigned to a group (default no).", type=str.lower, choices=yesChoices + noChoices, default="no")
 args = parser.parse_args()
+
+if args.debug:
+    ic.enable()
+    ic.configureOutput(includeContext=True)
+else:
+    ic.disable()
+ic(args)
 
 # ----------------------------------------------------------
 # sequence matching
@@ -89,9 +102,11 @@ def readPrimers(primer_file):
             }
         read_groups['unassigned'] = {'read_count':0, 'output_files':{'R1':None, 'R2':None}}
         read_groups['rejected'] = {'read_count':0, 'output_files':{'R1':None, 'R2':None}}
+    ic(read_groups)
     return read_groups
 
 def openGroupFiles(read_groups):
+    ic(read_groups)
     for k in read_groups:
         if read_groups[k]['output_files']['R1'] != None:
             read_groups[k]['output_files']['R1'] = open(read_groups[k]['output_files']['R1'], "w")
@@ -99,6 +114,7 @@ def openGroupFiles(read_groups):
             read_groups[k]['output_files']['R2'] = open(read_groups[k]['output_files']['R2'], "w")
         
 def closeGroupFiles(read_groups):
+    ic(read_groups)
     for k in read_groups:
         try:
             read_groups[k]['output_files']['R1'].close()
@@ -167,7 +183,7 @@ def assignReadsToGroupByReversePrimer(read1, read2, read_groups, quality=30):
 # ----------------------------------------------------------
     
 def main():
-    read_groups = openGroupFiles(args.primer_filename)
+    read_groups = readPrimers(args.primer_filename)
     if args.rejected:
         read_groups['rejected']['output_files']['R1'] = outputFilename('rejected', 'R1')
         read_groups['rejected']['output_files']['R2'] = outputFilename('rejected', 'R2')
@@ -179,8 +195,8 @@ def main():
     assignmentFunction = assignReadsToGroupByReversePrimer
 
     openGroupFiles(read_groups)
-
-    with gzip.open(R1_file, "rt") as R1, gzip.open(R2_file, "rt") as R2:
+    ic(read_groups)
+    with gzip.open(args.R1_filename, "rt") as R1, gzip.open(args.R2_filename, "rt") as R2:
         reads1 = SeqIO.parse(R1, "fastq")
         reads2 = SeqIO.parse(R2, "fastq")
         for (read1, read2, readNumber) in itertools.islice( zip(reads1, reads2, itertools.count(1)), args.limit):
