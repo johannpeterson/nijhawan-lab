@@ -196,7 +196,7 @@ def main():
 
     openGroupFiles(read_groups)
     ic(read_groups)
-    with gzip.open(args.R1_filename, "rt") as R1, gzip.open(args.R2_filename, "rt") as R2:
+    with gzip.open(args.R1_filename, "rt") as R1, gzip.open(args.R2_filename, "rt") as R2: # failing here - need to accomodate gzip or regular files
         reads1 = SeqIO.parse(R1, "fastq")
         reads2 = SeqIO.parse(R2, "fastq")
         for (read1, read2, readNumber) in itertools.islice( zip(reads1, reads2, itertools.count(1)), args.limit):
