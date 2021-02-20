@@ -1,0 +1,108 @@
+#!/bin/zsh
+
+#R1file="NB_R1_001.fastq"
+#R2file="NB_R2_001.fastq"
+#primerFile="primers.tsv"
+
+unset R1file
+unset R2file
+unset primerFile
+YES_CLEAN=0
+
+usage()
+{
+    echo "Usage: grepsplit -1 R1_file.fastq -2 R2_file.fastq -p primers.tsv
+                           [ -c | --clean ]"
+}
+
+cleanup()
+{
+    if [[ -e $primerFile ]]; then
+        echo "grepsplit: cleaning up based on $primerFile"
+        awk '{ cmd="rm R1_"$1".fastq; rm R2_"$1".fastq"; print(cmd); system(cmd) }' $primerFile
+        rm *.paired.fastq
+    else
+        echo "Cleanup requires a valid primers file."
+    fi
+}
+
+echo "arguments: $@"
+PARSED_ARGUMENTS=$(getopt -n grepsplit -o 1:2:p:hc --longoptions help,clean -- "$@")
+VALID_ARGUMENTS="$?"
+echo "PARSED_ARGUMENTS is $PARSED_ARGUMENTS"
+echo "VALID_ARGUMENTS is $VALID_ARGUMENTS"
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+    usage
+    exit 2
+fi
+
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+    case "$1" in
+        -1)
+            R1file=$2
+            shift 2
+            ;;
+        -2)
+            R2file=$2
+            shift 2
+            ;;
+        -p)
+            primerFile=$2
+            shift 2
+            ;;
+        -c | --clean)
+            YES_CLEAN=1
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift; break ;;
+        *)
+            shift; break ;;
+    esac
+done
+
+if [[ "$YES_CLEAN" = 1 ]]; then
+    cleanup
+    exit 1
+fi
+
+if [[ -e $R1file && -e $R2file && -e $primerFile ]]; then
+    echo "grepsplit: running awk scripts"
+    echo "R1file: $R1file R2file: $R2file primerFile: $primerFile"
+    R1base=${R1file:r}
+    R2base=${R2file:r}
+    awk -v FILE1="$R1file" \
+        '{ cmd="seqkit fx2tab "FILE1"|grep "$3"|seqkit tab2fx > R1_"$1".tmp.fastq"; print(cmd); system(cmd) }' \
+        $primerFile
+    awk -v FILE2="$R2file" \
+        '{ cmd="seqkit fx2tab "FILE2"|grep "$3"|seqkit tab2fx > R2_"$1".tmp.fastq"; print(cmd); system(cmd) }' \
+        $primerFile
+    # need to move files every pair operation
+    # temp output files: R1_BCn.tmp.paired.fastq & R2FILE.paired.fastq
+    echo "Pairing R1 subsets with $R2file"
+    awk -v R2BASE="$R2base" -v FILE2="$R2file" \
+        '{ 
+           cmd="seqkit pair -1 R1_"$1".tmp.fastq -2 "FILE2"; \
+                mv R1_"$1".tmp.paired.fastq R1_"$1".fastq; \
+                mv "R2BASE".paired.fastq R2_"$1".fastq"; \
+                print(cmd); system(cmd); }' \
+        $primerFile
+    # temp output files: R2_BCn.tmp.paired.fastq & R1FILE.paired.fastq
+    echo "Pairing R2 subsets with $R1file"
+    awk -v R1BASE="$R1base" -v FILE1="$R1file" \
+        '{ 
+           cmd="seqkit pair -1 R2_"$1".tmp.fastq -2 "FILE1"; \
+                cat R2_"$1".tmp.paired.fastq >> R2_"$1".fastq; \
+                cat "R1BASE".paired.fastq >> R1_"$1".fastq; \
+                rm "R1BASE".paired.fastq; rm R2_"$1".tmp.paired.fastq";
+           print(cmd); system(cmd); }' \
+           $primerFile
+    rm *.tmp.fastq
+    rm *.tmp.paired.fastq
+fi
