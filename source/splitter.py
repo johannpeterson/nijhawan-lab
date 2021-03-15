@@ -91,6 +91,7 @@ def readPrimers(primer_file):
                                        delimiter='\t',
                                        fieldnames=['tag','forward_primer','reverse_primer'])
         for primer in primer_reader:
+            ic(primer)
             read_groups[primer['tag']] = {
                 'forward_primer':primer['forward_primer'].upper(),
                 'reverse_primer':primer['reverse_primer'].upper(),
@@ -196,7 +197,9 @@ def main():
 
     openGroupFiles(read_groups)
     ic(read_groups)
-    with gzip.open(args.R1_filename, "rt") as R1, gzip.open(args.R2_filename, "rt") as R2: # failing here - need to accomodate gzip or regular files
+    valid_groups = {k:read_groups[k] for k in read_groups if (k != 'rejected') & (k != 'unassigned')}
+    # ic(valid_groups)
+    with open(args.R1_filename, "rt") as R1, open(args.R2_filename, "rt") as R2: # failing here - need to accomodate gzip or regular files
         reads1 = SeqIO.parse(R1, "fastq")
         reads2 = SeqIO.parse(R2, "fastq")
         for (read1, read2, readNumber) in itertools.islice( zip(reads1, reads2, itertools.count(1)), args.limit):
@@ -204,7 +207,7 @@ def main():
             if any([check(read1, read2)==False for check in prechecks]):
                 group = 'rejected'
             else:
-                group = assignReadsToGroupByReversePrimer(read1, read2, read_groups, quality=10)
+                group = assignReadsToGroupByReversePrimer(read1, read2, valid_groups, quality=10)
             if group == None:
                 group = 'unassigned'
 
@@ -222,7 +225,7 @@ def main():
     t = [[k, read_groups[k]['read_count']] for k in read_groups]
     t.append(["limit", args.limit])
     t.append(["total pairs read", readNumber])
-    print(tabulate.tabulate(t, headers=["sample","read count"]))
+    print(tabulate(t, headers=["sample","read count"]))
 
 if __name__ == '__main__':
     main()
