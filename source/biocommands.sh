@@ -23,6 +23,7 @@ cleantsv() {
     sed -E 's/[ \t]+$//' $1 | sed -E 's/[ \t]+/\t/g'
 }
 
+# Write one line for every pair of lines in file1, file2
 allpairs() {
     while IFS= read -r line1; do
         while IFS= read -r line2; do
@@ -31,6 +32,9 @@ allpairs() {
     done < "$1"
 }
 
+# for paired primer file with fields: tag1, seq1, tag2, seq2,
+# write a list of pairs as: tag1-tag2, seq1, seq2
+# e.g., allpairs f_primers.tsv r_primers.tsv | allpairs
 pairprimers() {
     allpairs $1 $2 | cleantsv | awk 'BEGIN{OFS="\t";} {print $1"-"$3,$2,$4}'
 }
