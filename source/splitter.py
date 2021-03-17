@@ -23,6 +23,7 @@ parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of rea
 parser.add_argument("-r", "--rejected", help="Output read pairs that do not pass sanity checks (default no)", action="store_true")
 parser.add_argument("-u", "--unassigned", help="Output read pairs that are not assigned to a group (default no)", action="store_true")
 parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
+parser.add_argument("-q", "--quality", help="Minimum base call quality for matching regions (default 0).", type=int, default=0)
 #parser.add_argument("-r", "--rejected", help="Output read pairs that do not pass sanity checks (default no).", type=str.lower, choices=yesChoices + noChoices, default="no")
 #parser.add_argument("-u", "--unassigned", help="Output read pairs that are not assigned to a group (default no).", type=str.lower, choices=yesChoices + noChoices, default="no")
 args = parser.parse_args()
@@ -124,7 +125,7 @@ def closeGroupFiles(read_groups):
             pass
 
 # ----------------------------------------------------------
-# read check functions
+# sanity check functions
 # ----------------------------------------------------------
 
 def readCheckIDsMatch(read1, read2):
@@ -179,8 +180,34 @@ def assignReadsToGroupByReversePrimer(read1, read2, read_groups, quality=30):
     else:
         return None
 
+def assignReadsToGroupByBothPrimers(read1, read2, read_groups, quality=30):
+    best_match = {'quality':0, 'group':''}
+    for group in read_groups:
+        m_rev = findBestSubsequence(read_groups[group]['reverse_primer'],
+                                    read1, min_quality=quality)
+        m_fwd = findBestSubsequence(read_groups[group]['forward_primer'],
+                                    read2, min_quality=quality)
+        if (m_fwd != None and m_rev != None):
+            quality = min(m_fwd['quality'], m_rev['quality'])
+            if quality > best_match['quality']:
+                best_match['quality'] = quality
+                best_match['group'] = group
+        m_rev = findBestSubsequence(read_groups[group]['reverse_primer'],
+                                    read2, min_quality=quality)
+        m_fwd = findBestSubsequence(read_groups[group]['forward_primer'],
+                                    read1, min_quality=quality)
+        if (m_fwd != None and m_rev != None):
+            quality = min(m_fwd['quality'], m_rev['quality'])
+            if quality > best_match['quality']:
+                best_match['quality'] = quality
+                best_match['group'] = group
+    if best_match['quality'] != 0:
+        return best_match['group']
+    else:
+        return None    
+    
 # ----------------------------------------------------------
-# main logic
+# main loop
 # ----------------------------------------------------------
     
 def main():
@@ -193,7 +220,10 @@ def main():
         read_groups['unassigned']['output_files']['R2'] = outputFilename('unassigned', 'R2')
     
     prechecks = [readCheckIDsMatch]
-    assignmentFunction = assignReadsToGroupByReversePrimer
+
+#    assignmentFunction = assignReadsToGroupByReversePrimer
+#    assignmentFunction = assignReadsToGroupByForwardPrimer
+    assignmentFunction = assignReadsToGroupByBothPrimers    
 
     openGroupFiles(read_groups)
     ic(read_groups)
@@ -207,7 +237,7 @@ def main():
             if any([check(read1, read2)==False for check in prechecks]):
                 group = 'rejected'
             else:
-                group = assignReadsToGroupByReversePrimer(read1, read2, valid_groups, quality=10)
+                group = assignmentFunction(read1, read2, valid_groups, quality=args.quality)
             if group == None:
                 group = 'unassigned'
 
