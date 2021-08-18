@@ -22,8 +22,8 @@
 #     https://github.com/ncbi/sra-tools/issues/291
 #     https://hub.docker.com/r/ncbi/sra-tools
 
-FROM broadinstitute/gatk:4.1.8.1
-ARG VERSION=0.2
+FROM broadinstitute/gatk:4.2.0.0
+ARG VERSION=0.3
 LABEL version=$VERSION
 LABEL description="Tools for bioinformatics used by Nijhawan Lab, UTSW"
 
@@ -41,6 +41,7 @@ ENTRYPOINT ["jupyter", "notebook", "--allow-root", "--ip=0.0.0.0", "--no-browser
 #   packagename \
 #   && rm -rf /var/lib/apt/lists/*
 
+RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 # SRA-Toolkit doesn't seem to be installing
 RUN apt-get update && apt-get --quiet install -y \
     sra-toolkit \
@@ -71,8 +72,12 @@ RUN ["chmod", "+x", "datasets"]
 # install seqkit
 # https://bioinf.shenwei.me/seqkit/
 # https://github.com/shenwei356/seqkit/releases/download/v0.14.0/seqkit_linux_amd64.tar.gz
-RUN ["curl", "-o", "seqkit_linux_amd64.tar.gz",  "https://github.com/shenwei356/seqkit/releases/download/v0.14.0/seqkit_linux_amd64.tar.gz"]
-# unpack
+RUN ["curl", "-L", "-o", \
+    "seqkit.tar.gz", \
+    "https://github.com/shenwei356/seqkit/releases/download/v0.14.0/seqkit_linux_amd64.tar.gz"]
+RUN ["tar", "-xvf", "seqkit.tar.gz"]
+# RUN ["wget", "https://github.com/shenwei356/seqkit/releases/download/v0.16.1/seqkit_linux_amd64.tar.gz"]
+# RUN ["tar", "-xvf", "seqkit_linux_amd64.tar.gz"]
 
 # Jupyter notebook server port
 EXPOSE $JUPYTER_PORT
