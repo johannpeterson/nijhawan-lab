@@ -23,7 +23,7 @@
 #     https://hub.docker.com/r/ncbi/sra-tools
 
 FROM broadinstitute/gatk:4.2.0.0
-ARG VERSION=0.3
+ARG VERSION=0.3.1
 LABEL version=$VERSION
 LABEL description="Tools for bioinformatics used by Nijhawan Lab, UTSW"
 
@@ -63,6 +63,11 @@ RUN apt-get update && apt-get --quiet install -y \
 COPY requirements.txt /home/bio/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /home/bio/requirements.txt
+
+# install Jupyter nbextensions
+RUN jupyter contrib nbextension install --user
+RUN jupyter nbextensions_configurator enable --user
+RUN jupyter nbextension enable collapsible_headings/main --user
 
 # install NCBI datasets utility
 WORKDIR /usr/bin

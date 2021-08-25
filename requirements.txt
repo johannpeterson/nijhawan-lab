@@ -20,3 +20,7 @@ openpyxl
 # for Jupyter progress bars
 # https://towardsdatascience.com/ever-wanted-progress-bars-in-jupyter-bdb3988d9cfc
 tqdm
+
+# Jupyter nbextensions
+jupyter_contrib_nbextensions
+jupyter_nbextensions_configurator
