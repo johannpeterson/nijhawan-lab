@@ -1,0 +1,86 @@
+<!-- Generator: GNU source-highlight 3.1.8
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><i><font color="#9A1900"># jpbio/primers.py</font></i>
+
+<b><font color="#000080">from</font></b> jpbio<font color="#990000">.</font>util <b><font color="#000080">import</font></b> rcDNA
+
+<i><font color="#9A1900"># PrimerTable (specifically readPrimersFile)</font></i>
+<i><font color="#9A1900"># expects a table of primers in this format:</font></i>
+<i><font color="#9A1900"># oVK025	GCTACCTTGGATATTGCTGAAGAGCTTG	ACCTTG 	F</font></i>
+<i><font color="#9A1900"># oVK031	GCTGCCGAAGATATTGCTGAAGAGCTTG	GCCGAA	F</font></i>
+<i><font color="#9A1900"># oVK032	GCTACTGCTGATATTGCTGAAGAGCTTG	TACTGC	F</font></i>
+<i><font color="#9A1900"># oVK033	GCTGAACGTGATATTGCTGAAGAGCTTG	GAACGT	F</font></i>
+<i><font color="#9A1900"># oVK034	GCTATCCATGATATTGCTGAAGAGCTTG	TATCCA	F</font></i>
+<i><font color="#9A1900"># oVK035	GCCTCCGGTGATATTGCTGAAGAGCTTG	CTCCGG	F</font></i>
+<i><font color="#9A1900"># oVK036	GCTACCACCGATATTGCTGAAGAGCTTG	ACCACC	F</font></i>
+<i><font color="#9A1900"># oVK037	GCTACCGAGGATATTGCTGAAGAGCTTG	ACCGAG	F</font></i>
+<i><font color="#9A1900"># oVK026	TTTTGTCACCCAGAGGTTGATTGTTCCAGA	TGTCAC 	R</font></i>
+<i><font color="#9A1900"># oVK038	TTTGTTAATCCAGAGGTTGATTGTTCCAGA	GTTAAT	R</font></i>
+<i><font color="#9A1900"># oVK039	TTTTATGGTCCAGAGGTTGATTGTTCCAGA	TATGGT	R</font></i>
+<i><font color="#9A1900"># oVK040	TTTTGAGATACAGAGGTTGATTGTTCCAGA	GAGATA	R</font></i>
+<i><font color="#9A1900"># oVK041	TTATGCACTCCAGAGGTTGATTGTTCCAGA	ATGCAC	R</font></i>
+<i><font color="#9A1900"># oVK042	TTTAGTCAGCCAGAGGTTGATTGTTCCAGA	AGTCAG	R</font></i>
+<i><font color="#9A1900"># oVK043	TTTTCCATTCCAGAGGTTGATTGTTCCAGA	TCCATT	R</font></i>
+<i><font color="#9A1900"># oVK044	TTTTGTGGTTCAGAGGTTGATTGTTCCAGA	GTGGTT	R</font></i>
+<i><font color="#9A1900"># oVK045	TTTTCTCTACCAGAGGTTGATTGTTCCAGA	TCTCTA	R</font></i>
+<i><font color="#9A1900"># oVK046	TTTTTACATCCAGAGGTTGATTGTTCCAGA	TACATC	R</font></i>
+<i><font color="#9A1900"># oVK047	TTTGGTAGACCAGAGGTTGATTGTTCCAGA	GGTAGA	R</font></i>
+<i><font color="#9A1900"># oVK048	TTTTACGATCCAGAGGTTGATTGTTCCAGA	TTTACG	R</font></i>
+
+<b><font color="#0000FF">class</font></b> PrimerTable<font color="#990000">:</font>
+<i><font color="#9A1900">    """Class for storing and managing a table of primers."""</font></i>
+    
+    <b><font color="#0000FF">def</font></b> <b><font color="#000000">__init__</font></b><font color="#990000">(</font>self<font color="#990000">,</font> filename<font color="#990000">=</font>None<font color="#990000">):</font>
+        self<font color="#990000">.</font>primers <font color="#990000">=</font> <font color="#990000">[]</font>
+        <b><font color="#0000FF">if</font></b> filename <b><font color="#0000FF">is</font></b> <b><font color="#0000FF">not</font></b> None<font color="#990000">:</font>
+            self<font color="#990000">.</font><b><font color="#000000">readPrimersFile</font></b><font color="#990000">(</font>filename<font color="#990000">)</font>
+
+    <b><font color="#0000FF">def</font></b> <b><font color="#000000">readPrimersFile</font></b><font color="#990000">(</font>self<font color="#990000">,</font> filename<font color="#990000">):</font>
+<i><font color="#9A1900">        """Read a tab-separated file with 4 columns into the PrimerTable object."""</font></i>        
+        with <b><font color="#000000">open</font></b><font color="#990000">(</font>filename<font color="#990000">,</font> newline<font color="#990000">=</font><font color="#FF0000">''</font><font color="#990000">)</font> as primers_IO<font color="#990000">:</font>
+            primer_reader <font color="#990000">=</font> csv<font color="#990000">.</font><b><font color="#000000">DictReader</font></b><font color="#990000">(</font>
+                primers_IO<font color="#990000">,</font> 
+                delimiter<font color="#990000">=</font><font color="#FF0000">'\t'</font><font color="#990000">,</font> 
+                fieldnames<font color="#990000">=[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">,</font><font color="#FF0000">'sequence'</font><font color="#990000">,</font><font color="#FF0000">'barcode'</font><font color="#990000">,</font><font color="#FF0000">'direction'</font><font color="#990000">])</font>
+        <b><font color="#0000FF">for</font></b> primer <b><font color="#0000FF">in</font></b> primer_reader<font color="#990000">:</font>
+            self<font color="#990000">.</font>primers<font color="#990000">.</font><b><font color="#000000">append</font></b><font color="#990000">(</font><b><font color="#000000">dict</font></b><font color="#990000">(</font>primer<font color="#990000">))</font>
+        self<font color="#990000">.</font>primer_lookup <font color="#990000">=</font> <font color="#990000">{</font>
+            p<font color="#990000">[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">]:</font> <font color="#990000">{</font>
+                <font color="#FF0000">'len'</font><font color="#990000">:</font><b><font color="#000000">len</font></b><font color="#990000">(</font>p<font color="#990000">[</font><font color="#FF0000">'sequence'</font><font color="#990000">]),</font> 
+                <font color="#FF0000">'sequence'</font><font color="#990000">:</font>p<font color="#990000">[</font><font color="#FF0000">'sequence'</font><font color="#990000">],</font>
+                <font color="#FF0000">'direction'</font><font color="#990000">:</font>p<font color="#990000">[</font><font color="#FF0000">'direction'</font><font color="#990000">]</font>
+            <font color="#990000">}</font> <b><font color="#0000FF">for</font></b> p <b><font color="#0000FF">in</font></b> primers<font color="#990000">}</font>
+
+    <b><font color="#0000FF">def</font></b> <b><font color="#000000">getForwardPrimers</font></b><font color="#990000">(</font>self<font color="#990000">):</font>
+<i><font color="#9A1900">    """Return a list of all primers with forward (F) direction."""</font></i>
+        <b><font color="#0000FF">return</font></b> <font color="#990000">[</font>p<font color="#990000">[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">]</font> <b><font color="#0000FF">for</font></b> p <b><font color="#0000FF">in</font></b> self<font color="#990000">.</font>primers <b><font color="#0000FF">if</font></b> p<font color="#990000">[</font><font color="#FF0000">'direction'</font><font color="#990000">]==</font><font color="#FF0000">'F'</font><font color="#990000">]</font>
+
+    <b><font color="#0000FF">def</font></b> <b><font color="#000000">getReversePrimers</font></b><font color="#990000">(</font>self<font color="#990000">):</font>
+<i><font color="#9A1900">    """Return a list of all primers with reverse (R) direction."""</font></i>
+    <b><font color="#0000FF">return</font></b> <font color="#990000">[</font>p<font color="#990000">[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">]</font> <b><font color="#0000FF">for</font></b> p <b><font color="#0000FF">in</font></b> self<font color="#990000">.</font>primers <b><font color="#0000FF">if</font></b> p<font color="#990000">[</font><font color="#FF0000">'direction'</font><font color="#990000">]==</font><font color="#FF0000">'R'</font><font color="#990000">]</font>
+
+    <b><font color="#0000FF">def</font></b> <b><font color="#000000">idPrimers</font></b><font color="#990000">(</font>seq<font color="#990000">):</font>
+<i><font color="#9A1900">        """Search the provided seq and return the first matching forward &amp; reverse primers."""</font></i>
+        found_primers <font color="#990000">=</font> <font color="#990000">{</font>
+            <font color="#FF0000">'fwd_primer'</font><font color="#990000">:</font>None<font color="#990000">,</font>
+            <font color="#FF0000">'fwd_primer_loc'</font><font color="#990000">:</font>None<font color="#990000">,</font> 
+            <font color="#FF0000">'rc_primer'</font><font color="#990000">:</font>None<font color="#990000">,</font> 
+            <font color="#FF0000">'rc_primer_loc'</font><font color="#990000">:</font>None<font color="#990000">,</font> 
+            <font color="#FF0000">'fwd_direction'</font><font color="#990000">:</font>None<font color="#990000">,</font>
+            <font color="#FF0000">'rc_direction'</font><font color="#990000">:</font>None
+        <font color="#990000">}</font>
+        <b><font color="#0000FF">for</font></b> p <b><font color="#0000FF">in</font></b> self<font color="#990000">.</font>primers<font color="#990000">:</font>
+            p1 <font color="#990000">=</font> seq<font color="#990000">.</font><b><font color="#000000">find</font></b><font color="#990000">(</font>p<font color="#990000">[</font><font color="#FF0000">'sequence'</font><font color="#990000">])</font>
+        <b><font color="#0000FF">if</font></b> p1 <font color="#990000">!=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">:</font>
+            found_primers<font color="#990000">[</font><font color="#FF0000">'fwd_primer'</font><font color="#990000">]</font> <font color="#990000">=</font> p<font color="#990000">[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">]</font>
+            found_primers<font color="#990000">[</font><font color="#FF0000">'fwd_primer_loc'</font><font color="#990000">]</font> <font color="#990000">=</font> p1
+            found_primers<font color="#990000">[</font><font color="#FF0000">'fwd_direction'</font><font color="#990000">]</font> <font color="#990000">=</font> p<font color="#990000">[</font><font color="#FF0000">'direction'</font><font color="#990000">]</font>
+            p2 <font color="#990000">=</font> seq<font color="#990000">.</font><b><font color="#000000">rfind</font></b><font color="#990000">(</font> <b><font color="#000000">rcDNA</font></b><font color="#990000">(</font> p<font color="#990000">[</font><font color="#FF0000">'sequence'</font><font color="#990000">]</font> <font color="#990000">))</font>
+        <b><font color="#0000FF">if</font></b> p2 <font color="#990000">!=</font> <font color="#990000">-</font><font color="#993399">1</font><font color="#990000">:</font>
+            found_primers<font color="#990000">[</font><font color="#FF0000">'rc_primer'</font><font color="#990000">]</font> <font color="#990000">=</font> p<font color="#990000">[</font><font color="#FF0000">'OriginalSeq'</font><font color="#990000">]</font>
+            found_primers<font color="#990000">[</font><font color="#FF0000">'rc_primer_loc'</font><font color="#990000">]</font> <font color="#990000">=</font> p2
+            found_primers<font color="#990000">[</font><font color="#FF0000">'rc_direction'</font><font color="#990000">]</font> <font color="#990000">=</font> p<font color="#990000">[</font><font color="#FF0000">'direction'</font><font color="#990000">]</font>
+        <b><font color="#0000FF">return</font></b> found_primers
+</tt></pre>
