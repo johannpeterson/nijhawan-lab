@@ -55,6 +55,7 @@ if [ "$NOTEBOOK" = true ] ; then
 else
     docker run \
            --entrypoint "bash" \
+           -p 8888:8888 \
            --volume=$SOURCE_DIR:/home/bio/source \
            --volume=$DATA_DIR:/data \
            -it $DOCKER_IMAGE
