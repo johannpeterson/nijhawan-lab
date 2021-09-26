@@ -54,13 +54,13 @@ class PrimerTable:
         }
         for p in self.primers:
             p1 = seq.find(p['sequence'])
-        if p1 != -1:
-            found_primers['fwd_primer'] = p['OriginalSeq']
-            found_primers['fwd_primer_loc'] = p1
-            found_primers['fwd_direction'] = p['direction']
-            p2 = seq.rfind( rcDNA( p['sequence'] ))
-            if p2 != -1:
-                found_primers['rc_primer'] = p['OriginalSeq']
-                found_primers['rc_primer_loc'] = p2
-                found_primers['rc_direction'] = p['direction']
+            if p1 != -1:
+                found_primers['fwd_primer'] = p['OriginalSeq']
+                found_primers['fwd_primer_loc'] = p1
+                found_primers['fwd_direction'] = p['direction']
+                p2 = seq.rfind( rcDNA( p['sequence'] ))
+                if p2 != -1:
+                    found_primers['rc_primer'] = p['OriginalSeq']
+                    found_primers['rc_primer_loc'] = p2
+                    found_primers['rc_direction'] = p['direction']
         return found_primers

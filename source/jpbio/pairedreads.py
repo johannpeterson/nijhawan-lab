@@ -3,6 +3,7 @@
 import jpbio.primers
 from jpbio.util import rcDNA
 import re
+from icecream import ic
 
 class PairAnalyzer:
     """A class to analyze pairs of paired-end reads."""
@@ -40,6 +41,8 @@ class PairAnalyzer:
     def analyzeReads(self, read1, read2):
         primers1 = self.primers.idPrimers(read1.seq)
         primers2 = self.primers.idPrimers(read2.seq)
+        ic(primers1)
+        ic(primers2)
 
         # implement error checking here
         if primers1["fwd_direction"] == 'R':
@@ -60,7 +63,16 @@ class PairAnalyzer:
         self.rc_read_forward_primer = self.rc_read_primers['fwd_primer']
         self.rc_read_rc_primer = self.rc_read_primers['rc_primer']
 
+    def getPrimers(self):
+        return {1: (self.forward_read_forward_primer, self.forward_read_rc_primer),
+                1: (self.rc_read_forward_primer, self.rc_read_rc_primer)}
+
 class SanityChecker:
+    maximum_barcode_length = 30
+    minimum_barcode_length = 14
+    minimum_barcode_quality = 20
+    barcode_regex = re.compile('([GC][AT])+[GC]?')
+
     def sanity_id_match(r):
         return r.forward_id == r.rc_id
 
@@ -85,22 +97,22 @@ class SanityChecker:
         lF = len(r.forward_read_barcode)
         lR = len(r.rc_read_barcode) 
         return (
-            (lF <= self.maximum_barcode_length) &
-            (lF >= self.minimum_barcode_length) &
-            (lR <= self.maximum_barcode_length) &
-            (lR >= self.minimum_barcode_length)
+            (lF <= SanityChecker.maximum_barcode_length) &
+            (lF >= SanityChecker.minimum_barcode_length) &
+            (lR <= SanityChecker.maximum_barcode_length) &
+            (lR >= SanityChecker.minimum_barcode_length)
         )
 
     def sanity_barcode_pattern(r):
-        if self.barcode_regex.fullmatch(r.forward_read_barcode):
+        if SanityChecker.barcode_regex.fullmatch(r.forward_read_barcode):
             return True
         else:
             return False
 
     def sanity_barcodes_quality(r):
         return (
-            (min(r.forward_read_barcode_quality) >= self.minimum_read_quality) &
-            (min(r.rc_read_barcode_quality) >= self.minimum_read_quality)
+            (min(r.forward_read_barcode_quality) >= SanityChecker.minimum_barcode_quality) &
+            (min(r.rc_read_barcode_quality) >= SanityChecker.minimum_barcode_quality)
         )
 
     basic_sanity_checks = [
