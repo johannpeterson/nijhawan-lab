@@ -3,6 +3,11 @@
 from jpbio.util import rcDNA
 import csv
 
+try:
+    from icecream import ic
+except ImportError:  # Graceful fallback if IceCream isn't installed.
+    ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)
+
 # PrimerTable (specifically readPrimersFile)
 # expects a table of primers in this format:
 # oVK025	GCTACCTTGGATATTGCTGAAGAGCTTG	ACCTTG 	F
@@ -52,15 +57,16 @@ class PrimerTable:
             'fwd_direction':None,
             'rc_direction':None
         }
+        ic(seq)
         for p in self.primers:
             p1 = seq.find(p['sequence'])
             if p1 != -1:
                 found_primers['fwd_primer'] = p['OriginalSeq']
                 found_primers['fwd_primer_loc'] = p1
                 found_primers['fwd_direction'] = p['direction']
-                p2 = seq.rfind( rcDNA( p['sequence'] ))
-                if p2 != -1:
-                    found_primers['rc_primer'] = p['OriginalSeq']
-                    found_primers['rc_primer_loc'] = p2
-                    found_primers['rc_direction'] = p['direction']
+            p2 = seq.rfind( rcDNA( p['sequence'] ))
+            if p2 != -1:
+                found_primers['rc_primer'] = p['OriginalSeq']
+                found_primers['rc_primer_loc'] = p2
+                found_primers['rc_direction'] = p['direction']
         return found_primers

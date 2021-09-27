@@ -167,12 +167,14 @@ class SanityChecker:
         }
     ]
 
-    def __init__(self):
+    def __init__(self, checkBarcodes=True):
         self.maximum_barcode_length = 30
         self.minimum_barcode_length = 14
         self.minimum_barcode_quality = 20
         self.barcode_regex = re.compile('([GC][AT])+[GC]?')
-        self.sanity_checks = self.basic_sanity_checks + self.barcode_sanity_checks
+        self.sanity_checks = self.basic_sanity_checks 
+        if checkBarcodes:
+            self.sanity_checks += self.barcode_sanity_checks
         self.resetStatistics()
 
     def resetStatistics(self):
