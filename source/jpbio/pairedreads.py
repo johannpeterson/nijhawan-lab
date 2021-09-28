@@ -45,7 +45,7 @@ class PairAnalyzer:
         ic(primers2)
 
         # implement error checking here
-        if primers1["fwd_direction"] == 'R':
+        if primers1["fwd_direction"] == 'F':
             self.forward_read = read1
             self.rc_read = read2
             self.forward_read_primers = primers1

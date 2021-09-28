@@ -47,6 +47,21 @@ class PrimerTable:
         """Return a list of all primers with reverse (R) direction."""
         return [p['OriginalSeq'] for p in self.primers if p['direction']=='R']
 
+    def lookupPrimer(self, primer_name):
+        try:
+            p = self.primer_lookup[primer_name]
+            p['name'] = primer_name
+            return p
+        except KeyError:
+            return None
+
+    def lookupPrimerDirection(self, primer_name):
+        try:
+            p = self.primer_lookup[primer_name]
+            return p['direction']
+        except KeyError:
+            return None
+
     def idPrimers(self, seq):
         """Search the provided seq and return the first matching forward & reverse primers."""
         found_primers = {

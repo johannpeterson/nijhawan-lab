@@ -1,4 +1,4 @@
-import os
+import os, weakref
 
 class MultiStream:
 
@@ -9,7 +9,7 @@ class MultiStream:
         self.extension = extension
         self.mode = mode
         self.directory = directory
-        self._finalizer = weakref.finalize(self, self.close, self._streams)
+        self._finalizer = weakref.finalize(self, self.close)
 
     def remove(self):
         self._finalizer()
@@ -20,19 +20,19 @@ class MultiStream:
 
     def addTag(self, tag):
         if tag not in self._streams:
-            self.streams[tag] = None
+            self._streams[tag] = None
     
     def open(self):
         # TODO: use the directory argument
-        for tag in self.streams:
+        for tag in self._streams:
             filename = os.path.join(
-                directory,
+                self.directory,
                 self.prefix + tag + self.suffix + self.extension)
-            self.streams[tag] = open(filename, self.mode)
+            self._streams[tag] = open(filename, self.mode)
 
-    def close(self, stream_dict=self.streams):
-        for f in stream.dict:
-            stream_dict[f].close()
+    def close(self):
+        for f in self._streams:
+            self._streams[f].close()
 
     def getStream(self, tag):
         try:
