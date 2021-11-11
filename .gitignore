@@ -10,5 +10,5 @@
 .#*
 source/notebooks/.ipynb_checkpoints
 stuff/*
-source/jpbio/tests/tmp
+source/jpbio/tests/temp
 __pycache__/*
