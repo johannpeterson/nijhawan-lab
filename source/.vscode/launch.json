@@ -10,6 +10,19 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: split_fastq.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":[
+                "/usr/data/bio/nijhawanlab/amplicons/VK004/VK004_R1_001.fastq", 
+                "/usr/data/bio/nijhawanlab/amplicons/VK004/VK004_R1_001.fastq",
+                "/usr/data/bio/nijhawanlab/amplicons/VK004/primers.txt",
+                "--limit", "25"
+            ]
         }
     ]
 }

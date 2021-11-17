@@ -23,7 +23,7 @@ class MultiStream:
             self._streams[tag] = None
     
     def getFileName(self, tag):
-        return self.prefix + tag + self.suffix + self.extension
+        return self.prefix + tag + self.suffix + "." + self.extension
 
     def getFilePath(self,tag):
         filepath = os.path.join(self.directory, self.getFileName(tag))
