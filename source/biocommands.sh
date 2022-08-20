@@ -38,3 +38,7 @@ allpairs() {
 pairprimers() {
     allpairs $1 $2 | cleantsv | awk 'BEGIN{OFS="\t";} {print $1"-"$3,$2,$4}'
 }
+
+# extract sequences for forward & reverse primers from primers.txt
+rprimers() {awk '$4 ~ /R/ {print $2}' <&0 >&1}
+fprimers() {awk '$4 ~ /F/ {print $2}' <&0 >&1}
