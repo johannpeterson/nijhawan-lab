@@ -38,3 +38,13 @@ allpairs() {
 pairprimers() {
     allpairs $1 $2 | cleantsv | awk 'BEGIN{OFS="\t";} {print $1"-"$3,$2,$4}'
 }
+
+# highlight primers in different colors
+phighlight () {
+    seqkit -w 0 fq2fa $1 | \
+    GREP_COLOR='31;40' grep --colour=always -e '$' -f forward.txt | \
+    GREP_COLOR='30;41' grep --colour=always -e '$' -f rcforward.txt | \
+    GREP_COLOR='32;40' grep --colour=always -e '$' -f reverse.txt | \
+    GREP_COLOR='30;42' grep --colour=always -e '$' -f rcreverse.txt | \
+    less
+}
