@@ -48,3 +48,8 @@ phighlight () {
     GREP_COLOR='30;42' grep --colour=always -e '$' -f rcreverse.txt | \
     less
 }
+
+# extract sequences for forward & reverse primers from primers.txt
+rprimers() {awk '$4 ~ /R/ {print $2}' <&0 >&1}
+fprimers() {awk '$4 ~ /F/ {print $2}' <&0 >&1}
+
