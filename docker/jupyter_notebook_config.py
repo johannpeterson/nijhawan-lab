@@ -3,7 +3,7 @@
 # specific changes for nijhawanlab/tools docker image
 # These are generally dangerous settings
 c.NotebookApp.allow_root = False
-# c.NotebookApp.token = ''
+c.NotebookApp.token = '<generated>'
 c.NotebookApp.notebook_dir = '/home/bio/source/notebooks/'
 c.NotebookApp.terminals_enabled = True
 
