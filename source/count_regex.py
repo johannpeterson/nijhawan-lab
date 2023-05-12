@@ -98,10 +98,18 @@ def main():
         args.out.close()
 
     if args.stats:
-        column_width = max( map(len, match_counts.keys())) + 2
-        print('{key:<{padding}}{value:>6}'.format(key='total rows', value=row_count, padding=column_width))
-        for k,v in match_counts.items():
-            print('{key:<{padding}}{value:>6}'.format(key=k, value=v, padding=column_width))
+        stats_table = {'total rows':row_count, **match_counts}
+        for k,v in stats_table.items():
+            stats_table[k] = str(v)
+        column_1_width = max( map(len, stats_table.keys()))
+        column_2_width = max( map(len, stats_table.values()))
+        for k,v in stats_table.items():
+            print('{key:<{padding_1}} {value:>{padding_2}}'.format(
+                key=k,
+                value=v,
+                padding_1=column_1_width,
+                padding_2=column_2_width
+            ))
             
 if __name__ == '__main__':
     main()
