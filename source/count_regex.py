@@ -35,11 +35,13 @@ if not isinstance(ic, types.FunctionType):
 ic(args)
 
 # ----------------------------------------------------------
-# main loop
+# main
 # ----------------------------------------------------------
     
 def main():
 
+    # read patterns file
+    
     ic(args.pattern_file)
     file_path = os.path.abspath(args.pattern_file)
     ic(file_path)
@@ -53,11 +55,13 @@ def main():
     sequences = importlib.import_module("sequences")
     ic(sequences.patterns)
 
+    # compile regular expressions
     regexes = {k:regex.compile(sequences.patterns[k]) for k in sequences.patterns.keys()}
     match_counts = {k:0 for k in sequences.patterns.keys()}
     column_names = [group_name for r in regexes.values() for group_name in r.groupindex.keys()]
     row_count=0
 
+    # set up table writer for writing regex match groups
     if args.out is not None:
         ic('Write to the file {}'.format(args.out))
         tableWriter = csv.DictWriter(
@@ -73,7 +77,8 @@ def main():
     
     ic(regexes)
     ic(match_counts)
-    
+
+    # read FASTQ file and attempt to match all regular expressions
     with open(args.FASTQ_file, "rt") as fq_file:
         reads1 = SeqIO.parse(fq_file, "fastq")
         for read in itertools.islice(reads1, args.limit):

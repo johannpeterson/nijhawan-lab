@@ -69,6 +69,17 @@ pairgrep() {
     pr --sep-string=' | ' -m -T -W $COLUMNS $2 $3 |grep --color=always -e '$' -e $1 |less
 }
 
+# check to make sure sequence IDs are the same in two files
+checkids () {
+    diff <(seqkit seq -n -i $1) <(seqkit seq -n -i $2)
+}
+
+# A more concise output that counts the lines.
+# The count is not accurate except that 0 means the IDs are the same (0 differences).
+checkids2 () {
+    diff -U 0 <(seqkit seq -n -i $1) <(seqkit seq -n -i $2) | grep -v ^@ | wc -l
+}
+
 # highlight primers in different colors
 # assumes the presence of four files containing the forward, reverse, reverse compliment forward & reverse primer sequences,
 # as produced by `split_primers`
@@ -122,6 +133,10 @@ function highlight2() {
     sed -u -E s"/($2)/$fg_c\1$c_rs/g"
 }
 
+# highlight regex matches
+# e.g:
+# > cat file.fasta | highlight red "ACTGACTG"
+#
 function highlight() {
     declare -A color_map
     color_map[black]="$(tput setaf 0)"
@@ -171,8 +186,27 @@ function count() {
     done
 }
 
+# testing shell glob expansion
 function expand() {
     echo $~1
     file_list=$~1
     echo $file_list
+}
+
+# Pull sequence records from the forward, reverse & merged read FASTQ files,
+# with IDs matching the argument passed to pull_seqs.  Write them to a file and
+# run MUSCLE to align them.
+
+function pull_seqs () {
+    FWD_FILE=$1"_R1_001.fastq"
+    REV_FILE=$1"_R2_001.fastq"
+    MERGE_FILE=$1"_flash2.fastq"
+    OUT_FILE="temp.ala"
+    echo "Forward: $FWD_FILE Reverse: $REV_FILE Merged: $MERGE_FILE"
+    
+    seqkit grep -p $2 $FWD_FILE | seqkit fq2fa -w0 > temp.fasta
+    seqkit grep -p $2 $REV_FILE | seqkit seq -r -p -w 0 | seqkit fq2fa -w0 >> temp.fasta
+    seqkit grep -p $2 $MERGE_FILE | seqkit fq2fa -w0 >> temp.fasta
+    muscle -align temp.fasta -output $OUT_FILE
+    echo "Alignment written to $OUT_FILE."
 }
