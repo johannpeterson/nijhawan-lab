@@ -146,11 +146,19 @@ function highlight() {
     color_map[blue]="$(tput setaf 4)"
     color_map[magenta]="$(tput setaf 5)"
     color_map[cyan]="$(tput setaf 6)"
-	
+    color_map[bold_red]="$(tput setaf 1)""$(tput setbf)"
+    color_map[bold_green]="$(tput setaf 2)""$(tput setbf)"
+    color_map[bold_blue]="$(tput setaf 4)""$(tput setbf)"
+    color_map[bold_yellow]="$(tput setaf 3)""$(tput setbf)"
+    
     fg_c=$color_map[$1]
     c_rs=`tput sgr0`
 
     sed -u -E "s/$2/$fg_c&$c_rs/g"
+}
+
+function dnaHighlight() {
+    highlight bold_blue 'G'|highlight bold_red 'A'|highlight bold_green 'C'|highlight bold_yellow 'T'
 }
 
 function count() {
