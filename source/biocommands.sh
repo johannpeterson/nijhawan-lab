@@ -204,17 +204,21 @@ function expand() {
 # Pull sequence records from the forward, reverse & merged read FASTQ files,
 # with IDs matching the argument passed to pull_seqs.  Write them to a file and
 # run MUSCLE to align them.
+# e.g.,
+# pull_seqs VK003 $ID
 
 function pull_seqs () {
     FWD_FILE=$1"_R1_001.fastq"
     REV_FILE=$1"_R2_001.fastq"
     MERGE_FILE=$1"_flash2.fastq"
     OUT_FILE="temp.ala"
-    echo "Forward: $FWD_FILE Reverse: $REV_FILE Merged: $MERGE_FILE"
+    echo "Forward: $FWD_FILE Reverse: $REV_FILE Merged: $MERGE_FILE" >&2
     
     seqkit grep -p $2 $FWD_FILE | seqkit fq2fa -w0 > temp.fasta
     seqkit grep -p $2 $REV_FILE | seqkit seq -r -p -w 0 | seqkit fq2fa -w0 >> temp.fasta
     seqkit grep -p $2 $MERGE_FILE | seqkit fq2fa -w0 >> temp.fasta
     muscle -align temp.fasta -output $OUT_FILE
-    echo "Alignment written to $OUT_FILE."
+    echo "Alignment written to $OUT_FILE." >&2
+    echo ">$2"
+    seqkit seq -s $OUT_FILE
 }
