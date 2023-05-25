@@ -70,13 +70,21 @@ def main():
 
     patterns = {}
     patterns['SEQ_FWD'] = sequence_to_regex(
-        common_sequence(forward_primer_sequences))
+        common_sequence(forward_primer_sequences),
+        name="seq_fwd_"
+    )
     patterns['SEQ_REV'] = sequence_to_regex(
-        common_sequence(reverse_primer_sequences))
+        common_sequence(reverse_primer_sequences),
+        name="seq_rev_"
+    )
     patterns['SEQ_FWD_RC'] = sequence_to_regex(
-        rcDNA(common_sequence(forward_primer_sequences)))
+        rcDNA(common_sequence(forward_primer_sequences)),
+        name="seq_fwd_rc_"
+    )
     patterns['SEQ_REV_RC'] = sequence_to_regex(
-        rcDNA(common_sequence(reverse_primer_sequences)))
+        rcDNA(common_sequence(reverse_primer_sequences)),
+        name="seq_rev_rc_"
+    )
 
     for k in patterns:
         print("\'{}\': \"{}\"".format(k, patterns[k]))

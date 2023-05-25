@@ -55,7 +55,10 @@ def sequence_to_regex(seq, group=True, name=None):
     for m in matches:
         group_length = m.span()[1] - m.span()[0]
         if name:
-            group_string = "(?<{name}{num}>.{{{len}}})".format(name=name, num=group_num, len=group_length)
+            group_string = "(?P<{name}{num}>.{{{len}}})".format(
+                name=name,
+                num=group_num,
+                len=group_length)
         elif group:
             group_string = "(.{{{len}}})".format(len=group_length)
         else:
