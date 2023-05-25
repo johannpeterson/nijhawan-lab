@@ -55,9 +55,6 @@ def main():
         for primer in primer_reader:
             primers.append(dict(primer))
 
-    # forward_primers = [p['OriginalSeq'] for p in primers if p['direction'] == 'F']
-    # reverse_primers = [p['OriginalSeq'] for p in primers if p['direction'] == 'R']
-
     primer_lookup = {p['OriginalSeq']:
                      {'len': len(p['sequence']),
                       'sequence': p['sequence'],
@@ -81,7 +78,8 @@ def main():
     patterns['SEQ_REV_RC'] = sequence_to_regex(
         rcDNA(common_sequence(reverse_primer_sequences)))
 
-    print(patterns)
+    for k in patterns:
+        print("\'{}\': \"{}\"".format(k, patterns[k]))
 
 
 if __name__ == '__main__':
