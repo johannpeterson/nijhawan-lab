@@ -1,12 +1,17 @@
 #! python3
+"""Count matches for a list of regular expressions in a FASTQ file.
+
+count_regex.py takes as input a pattern_file, containing a python dict
+of pattern names mapped to regular expressions, and a FASTQ file.
+"""
 
 import argparse
 import os
 import csv
 import itertools
 import types
-import regex
 import importlib.util
+import regex
 from Bio import SeqIO
 
 try:
@@ -14,7 +19,7 @@ try:
 except ImportError:  # Graceful fallback if IceCream isn't installed.
     ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
 
-parser = argparse.ArgumentParser(description='Count regex matches in a FASTQ file.')
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("pattern_file", help="Regex pattern strings in Python syntax.")
 parser.add_argument("FASTQ_file", help="FASTQ file to read")
 parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads", type=int, default=None)
