@@ -1,12 +1,13 @@
 #! python3
-from Bio import SeqIO
+
 import argparse
 import os
 import csv
 import itertools
+import types
 import regex
 import importlib.util
-import types
+from Bio import SeqIO
 
 try:
     from icecream import ic
@@ -45,7 +46,7 @@ def main():
     ic(args.pattern_file)
     file_path = os.path.abspath(args.pattern_file)
     ic(file_path)
-    (head, tail) = os.path.split(args.pattern_file)
+    (_, tail) = os.path.split(args.pattern_file)
     (module_name, _) = os.path.splitext(tail)
     ic(module_name)
     sequences_spec = importlib.util.spec_from_file_location(
