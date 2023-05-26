@@ -17,11 +17,9 @@ parser.add_argument("primer_file", help="Table of primer sequences.")
 parser.add_argument("-d", "--debug",
                     help="Enable debugging output", action="store_true")
 parser.add_argument("-o", "--out",
-                    help="Write a table (tsv) of the named groups matching each line.",
+                    help="Write patterns to the output file instead of to stdout.",
                     type=argparse.FileType('w'),
                     default=None)
-parser.add_argument("-v", "--verbose", help="Verbose - very.",
-                    action="store_true")
 
 args = parser.parse_args()
 
@@ -86,9 +84,12 @@ def main():
         name="seq_rev_rc_"
     )
 
-    for k in patterns:
-        print("\'{}\': \"{}\"".format(k, patterns[k]))
-
+    pattern_list = ["\t\'{}\': \"{}\"".format(k, patterns[k]) for k in patterns]
+    print("patterns = {", file=args.out)
+    print(",\n".join(pattern_list), file=args.out)
+    print("}", file=args.out)
+    if args.out:
+        args.out.close()
 
 if __name__ == '__main__':
     main()
