@@ -22,10 +22,14 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("pattern_file", help="Regex pattern strings in Python syntax.")
 parser.add_argument("FASTQ_file", help="FASTQ file to read")
-parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads", type=int, default=None)
+parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads",
+                    type=int, default=None)
 parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
-parser.add_argument("-o", "--out", help="Write a table (tsv) of the named groups matching each line.", type=argparse.FileType('w'), default=None)
-parser.add_argument("-s", "--stats", help="Output statistics including match counts.", action="store_true")
+parser.add_argument("-o", "--out",
+                    help="Write a table (tsv) of the named groups matching each line.",
+                    type=argparse.FileType('w'), default=None)
+parser.add_argument("-s", "--stats", help="Output statistics including match counts.",
+                    action="store_true")
 parser.add_argument("--seq", help="Write the sequences to stdout.", action="store_true")
 parser.add_argument("-v", "--verbose", help="Verbose - very.", action="store_true")
 
@@ -92,18 +96,18 @@ def main():
     with open(args.FASTQ_file, "rt") as fq_file:
         reads1 = SeqIO.parse(fq_file, "fastq")
         for read in itertools.islice(reads1, args.limit):
-            match_groups = {name:None for name in column_names}
+            match_groups = {name: None for name in column_names}
             seq = str(read.seq)
             if args.seq:
                 print(seq)
             row_count += 1
-            for label, r in regexes.items():
-                m = r.search(seq)
+            for label, re in regexes.items():
+                re_match = re.search(seq)
                 if args.verbose:
-                    ic(r)
-                if m:
+                    ic(re)
+                if re_match:
                     match_counts[label] += 1
-                    for group_name, group_value in m.groupdict().items():
+                    for group_name, group_value in re_match.groupdict().items():
                         match_groups[group_name] = group_value
             # ic(match_groups)
             if args.out:
