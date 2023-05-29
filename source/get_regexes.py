@@ -123,8 +123,13 @@ def main():
                                        primer_lookup[K]['sequence'],
                                        K, pattern_label=pattern)
                         for K in primer_lookup]
-                        # if primer_lookup[K]['direction'] == 'F']
                        )
+        matches.extend([primer_matches(patterns[pattern],
+                                       rcDNA(primer_lookup[K]['sequence']),
+                                       K, pattern_label=pattern)
+                        for K in primer_lookup]
+                       )
+        
     match_table = [i for i in matches if i is not None]
     field_names = ['name', 'pattern']
     for m in match_table:
