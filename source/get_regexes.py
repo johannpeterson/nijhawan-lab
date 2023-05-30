@@ -110,6 +110,7 @@ def main():
         name="seq_rev_rc_"
     )
 
+    # Write the list of patterns matching each set of primers.
     pattern_list = ["\t\'{}\': \"{}\"".format(k, v) for k, v in patterns.items()]
     print("patterns = {", file=args.out)
     print(",\n".join(pattern_list), file=args.out)
@@ -117,29 +118,30 @@ def main():
     if args.out:
         args.out.close()
 
-    matches = []
-    for pattern in ['SEQ_FWD', 'SEQ_REV', 'SEQ_FWD_RC', 'SEQ_REV_RC']:
-        matches.extend([primer_matches(patterns[pattern],
-                                       primer_lookup[K]['sequence'],
-                                       K, pattern_label=pattern)
-                        for K in primer_lookup]
-                       )
-        matches.extend([primer_matches(patterns[pattern],
-                                       rcDNA(primer_lookup[K]['sequence']),
-                                       K, pattern_label=pattern)
-                        for K in primer_lookup]
-                       )
-        
-    match_table = [i for i in matches if i is not None]
-    field_names = ['name', 'pattern']
-    for m in match_table:
-        for k in m.keys():
-            if k not in field_names:
-                field_names.append(k)
-    ic(match_table)
-    ic(field_names)
-
+    # Compile the table of strings matching each group in the regexes
+    # for every primer.
     if args.matches:
+        matches = []
+        for pattern in ['SEQ_FWD', 'SEQ_REV', 'SEQ_FWD_RC', 'SEQ_REV_RC']:
+            matches.extend([primer_matches(patterns[pattern],
+                                           primer_lookup[K]['sequence'],
+                                           K, pattern_label=pattern)
+                            for K in primer_lookup]
+                           )
+            matches.extend([primer_matches(patterns[pattern],
+                                           rcDNA(primer_lookup[K]['sequence']),
+                                           K, pattern_label=pattern)
+                            for K in primer_lookup]
+                           )
+            match_table = [i for i in matches if i is not None]
+            field_names = ['name', 'pattern']
+            for m in match_table:
+                for k in m.keys():
+                    if k not in field_names:
+                        field_names.append(k)
+                        ic(match_table)
+                        ic(field_names)
+
         match_writer = csv.DictWriter(args.matches, field_names)
         match_writer.writeheader()
         match_writer.writerows(match_table)
