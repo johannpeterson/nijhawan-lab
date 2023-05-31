@@ -7,6 +7,7 @@ of pattern names mapped to regular expressions, and a FASTQ file.
 
 import argparse
 import os
+import sys
 import csv
 import itertools
 import types
@@ -48,29 +49,54 @@ ic(args)
 # ----------------------------------------------------------
 
 
+def print_table(table, out_file=sys.stdout):
+    for k, v in table.items():
+        table[k] = str(v)
+    column_1_width = max(map(len, table.keys()))
+    column_2_width = max(map(len, table.values()))
+    for k, v in table.items():
+        print('{key:<{padding_1}} {value:>{padding_2}}'.format(
+            key=k,
+            value=v,
+            padding_1=column_1_width,
+            padding_2=column_2_width
+        ), file=out_file)
+
+
+def import_patterns(pattern_file):
+    pattern_imports = {}
+    with open(pattern_file) as infile:
+        exec(infile.read(), pattern_imports, pattern_imports)
+    return pattern_imports["patterns"]
+
+
 def main():
+    """main
+    Read the patterns file.  Loop throuth the FASTQ file
+    and count matches for each regular expression in the patterns.
+    """
 
     # read patterns file
-
     ic(args.pattern_file)
-    file_path = os.path.abspath(args.pattern_file)
-    ic(file_path)
-    (_, tail) = os.path.split(args.pattern_file)
-    (module_name, _) = os.path.splitext(tail)
-    ic(module_name)
-    sequences_spec = importlib.util.spec_from_file_location(
-        module_name,
-        file_path)
-    sequences_module = importlib.util.module_from_spec(sequences_spec)
-    ic(dir(sequences_module))
-    sequences_spec.loader.exec_module(sequences_module)
-    sequences = importlib.import_module("sequences")
-    ic(sequences.patterns)
+    ic(os.path.abspath(args.pattern_file))
+    patterns = import_patterns(os.path.abspath(args.pattern_file))
+
+    # (_, tail) = os.path.split(args.pattern_file)
+    # (module_name, _) = os.path.splitext(tail)
+    # ic(module_name)
+    # sequences_spec = importlib.util.spec_from_file_location(
+    #     module_name,
+    #     file_path)
+    # sequences_module = importlib.util.module_from_spec(sequences_spec)
+    # ic(dir(sequences_module))
+    # sequences_spec.loader.exec_module(sequences_module)
+    # sequences = importlib.import_module("sequences")
+    # ic(sequences.patterns)
 
     # compile regular expressions
-    regexes = {k: regex.compile(sequences.patterns[k])
-               for k in sequences.patterns.keys()}
-    match_counts = {k: 0 for k in sequences.patterns.keys()}
+    regexes = {k: regex.compile(patterns[k])
+               for k in patterns.keys()}
+    match_counts = {k: 0 for k in patterns.keys()}
     column_names = [group_name for r in regexes.values()
                     for group_name in r.groupindex.keys()]
     row_count = 0
@@ -87,7 +113,7 @@ def main():
         )
         tableWriter.writeheader()
     else:
-        tableWriter = lambda x: None
+        table_writer = lambda x: None
 
     ic(regexes)
     ic(match_counts)
@@ -111,24 +137,13 @@ def main():
                         match_groups[group_name] = group_value
             # ic(match_groups)
             if args.out:
-                tableWriter.writerow(match_groups)
+                table_writer.writerow(match_groups)
 
     if args.out is not None:
         args.out.close()
 
     if args.stats:
-        stats_table = {'total rows': row_count, **match_counts}
-        for k, v in stats_table.items():
-            stats_table[k] = str(v)
-        column_1_width = max(map(len, stats_table.keys()))
-        column_2_width = max(map(len, stats_table.values()))
-        for k, v in stats_table.items():
-            print('{key:<{padding_1}} {value:>{padding_2}}'.format(
-                key=k,
-                value=v,
-                padding_1=column_1_width,
-                padding_2=column_2_width
-            ))
+        print_table({'total rows': row_count, **match_counts})
 
 
 if __name__ == '__main__':
