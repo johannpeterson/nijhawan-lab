@@ -104,14 +104,14 @@ def main():
     # set up table writer for writing regex match groups
     if args.out is not None:
         ic('Write to the file {}'.format(args.out))
-        tableWriter = csv.DictWriter(
+        table_writer = csv.DictWriter(
             args.out,
             fieldnames=column_names,
             delimiter='\t',
             restval='',
             extrasaction='ignore'
         )
-        tableWriter.writeheader()
+        table_writer.writeheader()
     else:
         table_writer = lambda x: None
 
