@@ -6,12 +6,10 @@ of pattern names mapped to regular expressions, and a FASTQ file.
 """
 
 import argparse
-import os
 import sys
 import csv
 import itertools
 import types
-import importlib.util
 import regex
 from Bio import SeqIO
 
@@ -24,7 +22,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("fastq_file", nargs='?',
                     help="FASTQ file to read, or stdin if not provided.",
                     type=argparse.FileType('r'), default=sys.stdout)
-parser.add_argument("pattern_file", help="Regex pattern strings in Python syntax.")
+parser.add_argument("-p", "--patterns",
+                    type=argparse.FileType('r'), default=None, action="append", required=True,
+                    help="Regex pattern strings in Python syntax.  Multiple files can be specified.")
 parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads",
                     type=int, default=None)
 parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
@@ -67,8 +67,7 @@ def print_table(table, out_file=sys.stdout):
 
 def import_patterns(pattern_file):
     pattern_imports = {}
-    with open(pattern_file) as infile:
-        exec(infile.read(), pattern_imports, pattern_imports)
+    exec(pattern_file.read(), pattern_imports, pattern_imports)
     return pattern_imports["patterns"]
 
 
@@ -79,9 +78,10 @@ def main():
     """
 
     # read patterns file
-    ic(args.pattern_file)
-    ic(os.path.abspath(args.pattern_file))
-    patterns = import_patterns(os.path.abspath(args.pattern_file))
+    ic(args.patterns)
+    patterns = {}
+    for patterns_file in args.patterns:
+        patterns.update(import_patterns(patterns_file))
 
     # (_, tail) = os.path.split(args.pattern_file)
     # (module_name, _) = os.path.splitext(tail)
