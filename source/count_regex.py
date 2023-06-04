@@ -21,8 +21,10 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
     ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("fastq_file", nargs='?',
+                    help="FASTQ file to read, or stdin if not provided.",
+                    type=argparse.FileType('r'), default=sys.stdout)
 parser.add_argument("pattern_file", help="Regex pattern strings in Python syntax.")
-parser.add_argument("FASTQ_file", help="FASTQ file to read")
 parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of reads",
                     type=int, default=None)
 parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
@@ -119,25 +121,24 @@ def main():
     ic(match_counts)
 
     # read FASTQ file and attempt to match all regular expressions
-    with open(args.FASTQ_file, "rt") as fq_file:
-        reads1 = SeqIO.parse(fq_file, "fastq")
-        for read in itertools.islice(reads1, args.limit):
-            match_groups = {name: None for name in column_names}
-            seq = str(read.seq)
-            if args.seq:
-                print(seq)
-            row_count += 1
-            for label, re in regexes.items():
-                re_match = re.search(seq)
-                if args.verbose:
-                    ic(re)
-                if re_match:
-                    match_counts[label] += 1
-                    for group_name, group_value in re_match.groupdict().items():
-                        match_groups[group_name] = group_value
-            # ic(match_groups)
-            if args.out:
-                table_writer.writerow(match_groups)
+    reads = SeqIO.parse(args.fastq_file, "fastq")
+    for read in itertools.islice(reads, args.limit):
+        row_count += 1
+        match_groups = {name: None for name in column_names}
+        seq = str(read.seq)
+        if args.seq:
+            print(seq)
+        for label, re in regexes.items():
+            re_match = re.search(seq)
+            if args.verbose:
+                ic(re)
+            if re_match:
+                match_counts[label] += 1
+                for group_name, group_value in re_match.groupdict().items():
+                    match_groups[group_name] = group_value
+                # ic(match_groups)
+        if args.out:
+            table_writer.writerow(match_groups)
 
     if args.out is not None:
         args.out.close()
