@@ -52,6 +52,7 @@ ic(args)
 
 
 def print_table(table, out_file=sys.stdout):
+    """Print a simple dictionary with uniform column widths."""
     for k, v in table.items():
         table[k] = str(v)
     column_1_width = max(map(len, table.keys()))
@@ -66,6 +67,8 @@ def print_table(table, out_file=sys.stdout):
 
 
 def import_patterns(pattern_file):
+    """Read the file object passed and return the 'patterns' object.
+    File should be valid python code.  Uses exec."""
     pattern_imports = {}
     exec(pattern_file.read(), pattern_imports, pattern_imports)
     return pattern_imports["patterns"]
@@ -73,7 +76,7 @@ def import_patterns(pattern_file):
 
 def main():
     """main
-    Read the patterns file.  Loop throuth the FASTQ file
+    Read the patterns file(s).  Loop throuth the FASTQ file
     and count matches for each regular expression in the patterns.
     """
 
@@ -83,22 +86,10 @@ def main():
     for patterns_file in args.patterns:
         patterns.update(import_patterns(patterns_file))
 
-    # (_, tail) = os.path.split(args.pattern_file)
-    # (module_name, _) = os.path.splitext(tail)
-    # ic(module_name)
-    # sequences_spec = importlib.util.spec_from_file_location(
-    #     module_name,
-    #     file_path)
-    # sequences_module = importlib.util.module_from_spec(sequences_spec)
-    # ic(dir(sequences_module))
-    # sequences_spec.loader.exec_module(sequences_module)
-    # sequences = importlib.import_module("sequences")
-    # ic(sequences.patterns)
-
     # compile regular expressions
     regexes = {k: regex.compile(v)
                for k, v in patterns.items()}
-    match_counts = {k: 0 for k in patterns.keys()}
+    match_counts = {k: 0 for k in patterns}
     column_names = [group_name for r in regexes.values()
                     for group_name in r.groupindex.keys()]
     row_count = 0
