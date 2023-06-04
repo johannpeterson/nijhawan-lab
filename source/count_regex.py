@@ -21,7 +21,7 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("fastq_file", nargs='?',
                     help="FASTQ file to read, or stdin if not provided.",
-                    type=argparse.FileType('r'), default=sys.stdout)
+                    type=argparse.FileType('r'), default=sys.stdin)
 parser.add_argument("-p", "--patterns",
                     type=argparse.FileType('r'), default=None, action="append", required=True,
                     help="Regex pattern strings in Python syntax.  Multiple files can be specified.")
@@ -96,8 +96,8 @@ def main():
     # ic(sequences.patterns)
 
     # compile regular expressions
-    regexes = {k: regex.compile(patterns[k])
-               for k in patterns.keys()}
+    regexes = {k: regex.compile(v)
+               for k, v in patterns.items()}
     match_counts = {k: 0 for k in patterns.keys()}
     column_names = [group_name for r in regexes.values()
                     for group_name in r.groupindex.keys()]
