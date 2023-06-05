@@ -5,10 +5,11 @@
 # Expects a TSV file with fileds name_fwd, name_fwd_rc, name_rev, name_rev_rc,
 # barcode_fwd, barcode_rc.  The output will contain fields barcode, fwd_primer & rev_primer.
 # FILTER, if set, excludes lines without both forward & reverse primers and without a barcode.
+# BC_LENGTH, if set, adds a column containing the length of the barcode string.
+#
+# e.g. merge_names.awk -v FILTER=1 -v BC_LENGTH=1 temp.4.tsv
 
-# e.g. merge_names.awk -v FILTER=1 temp.4.tsv
-
-# For awk help:
+# For awk advice on the header row:
 # https://stackoverflow.com/questions/37529232/awk-extract-data-from-a-column-by-name-rather-than-position
 
 function reverse_complement(sequence)
@@ -33,8 +34,6 @@ BEGIN {
         excluded_fields["seq_rev_1"] = \
         excluded_fields["seq_rev_rc_1"] = \
         ""
-    # FILTER = 0
-    BC_LENGTH = 0
 }
 
 FNR==1 {
