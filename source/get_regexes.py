@@ -9,6 +9,7 @@ contain the character 'F' or 'R' for foward or reverse.
 
 import argparse
 import os
+import sys
 import csv
 import types
 import regex
@@ -23,14 +24,14 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("primer_file", help="Table of primer sequences.")
 parser.add_argument("-d", "--debug",
                     help="Enable debugging output", action="store_true")
-parser.add_argument("-o", "--out",
-                    help="Write patterns to the output file instead of to stdout.",
-                    type=argparse.FileType('w'),
-                    default=None)
+parser.add_argument("-p", "--patterns",
+                    help="Write patterns to the output file instead of to stderr.",
+                    type=argparse.FileType('w'), nargs='?',
+                    default=sys.stderr)
 parser.add_argument("-m", "--matches",
                     help="Specify a file to write a table of matching groups.",
-                    type=argparse.FileType('w'),
-                    default=None)
+                    type=argparse.FileType('w'), nargs='?',
+                    default=sys.stdout)
 
 args = parser.parse_args()
 
@@ -112,11 +113,11 @@ def main():
 
     # Write the list of patterns matching each set of primers.
     pattern_list = ["\t\'{}\': \"{}\"".format(k, v) for k, v in patterns.items()]
-    print("patterns = {", file=args.out)
-    print(",\n".join(pattern_list), file=args.out)
-    print("}", file=args.out)
-    if args.out:
-        args.out.close()
+    print("patterns = {", file=args.patterns)
+    print(",\n".join(pattern_list), file=args.patterns)
+    print("}", file=args.patterns)
+    # if args.out:
+    #     args.out.close()
 
     # Compile the table of strings matching each group in the regexes
     # for every primer.
@@ -142,10 +143,10 @@ def main():
                         ic(match_table)
                         ic(field_names)
 
-        match_writer = csv.DictWriter(args.matches, field_names)
+        match_writer = csv.DictWriter(args.matches, field_names, dialect="excel-tab")
         match_writer.writeheader()
         match_writer.writerows(match_table)
-        args.matches.close()
+        # args.matches.close()
 
 
 if __name__ == '__main__':

@@ -55,7 +55,7 @@ split_primers() {
 
 ########################################
 #
-# Searching & Highlighting
+# Highlighting
 #
 ########################################
 
@@ -69,17 +69,14 @@ pairgrep() {
     pr --sep-string=' | ' -m -T -W $COLUMNS $2 $3 |grep --color=always -e '$' -e $1 |less
 }
 
-# check to make sure sequence IDs are the same in two files
-checkids () {
-    diff <(seqkit seq -n -i $1) <(seqkit seq -n -i $2)
+prettytsv() {
+    if [[ "$#" -eq 0 ]]; then   
+        csvtk pretty -t | less
+    else
+        csvtk pretty -t $1 | less
+    fi
 }
-
-# A more concise output that counts the lines.
-# The count is not accurate except that 0 means the IDs are the same (0 differences).
-checkids2 () {
-    diff -U 0 <(seqkit seq -n -i $1) <(seqkit seq -n -i $2) | grep -v ^@ | wc -l
-}
-
+    
 # highlight primers in different colors
 # assumes the presence of four files containing the forward, reverse, reverse compliment forward & reverse primer sequences,
 # as produced by `split_primers`
@@ -161,6 +158,12 @@ function dnaHighlight() {
     highlight bold_blue 'G'|highlight bold_red 'A'|highlight bold_green 'C'|highlight bold_yellow 'T'
 }
 
+########################################
+#
+# Searching, etc
+#
+########################################
+
 function count() {
     pattern_file='/Users/johann/bio/nijhawanlab/source/sequences.sh'
     #SEQ_REF_PRE="TTCTTGACGAGTTCTTCTGA"
@@ -194,11 +197,15 @@ function count() {
     done
 }
 
-# testing shell glob expansion
-function expand() {
-    echo $~1
-    file_list=$~1
-    echo $file_list
+# check to make sure sequence IDs are the same in two files
+checkids () {
+    diff <(seqkit seq -n -i $1) <(seqkit seq -n -i $2)
+}
+
+# A more concise output that counts the lines.
+# The count is not accurate except that 0 means the IDs are the same (0 differences).
+checkids2 () {
+    diff -U 0 <(seqkit seq -n -i $1) <(seqkit seq -n -i $2) | grep -v ^@ | wc -l
 }
 
 # Pull sequence records from the forward, reverse & merged read FASTQ files,
@@ -221,4 +228,11 @@ function pull_seqs () {
     echo "Alignment written to $OUT_FILE." >&2
     echo ">$2"
     seqkit seq -s $OUT_FILE
+}
+
+# testing shell glob expansion
+function expand() {
+    echo $~1
+    file_list=$~1
+    echo $file_list
 }
