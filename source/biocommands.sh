@@ -65,8 +65,12 @@ split_primers() {
 
 # Display corresponding reads side by side, with search sequence highlighted.
 # e.g. pairgrep ACGT R1.fastq R2.fastq
+# pairgrep() {
+#     pr --sep-string=' | ' -m -T -W $COLUMNS $2 $3 |grep --color=always -e '$' -e $1 |less
+# }
+
 pairgrep() {
-    pr --sep-string=' | ' -m -T -W $COLUMNS $2 $3 |grep --color=always -e '$' -e $1 |less
+    pr -m -t -w $COLUMNS $2 $3 |grep --color=always -e '$' -e $1 |less
 }
 
 prettytsv() {
