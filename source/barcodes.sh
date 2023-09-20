@@ -9,7 +9,7 @@ MATCHES=matches.tsv
 BARCODE_TABLE=barcode_table.tsv
 BARCODE_COUNTS=barcode_counts.tsv
 
-echo "get_regexes.sh"
+echo "get_regexes.py"
 echo "separate_matchtable.awk"
 $SOURCEDIR/get_regexes.py $PRIMERS --patterns $PATTERNS | $SOURCEDIR/separate_matchtable.awk
 

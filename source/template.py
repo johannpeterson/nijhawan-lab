@@ -13,6 +13,8 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
     ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("-d", "--debug",
+                    help="Enable debugging output", action="store_true")
 parser.add_argument("infile", nargs='?',
                     help="File to read from;  stdin if not provided.",
                     type=argparse.FileType('r'), default=sys.stdin)
