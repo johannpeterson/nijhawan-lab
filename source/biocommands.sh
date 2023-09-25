@@ -55,7 +55,7 @@ split_primers() {
 
 ########################################
 #
-# Highlighting
+# Highlighting & Viewing
 #
 ########################################
 
@@ -161,6 +161,13 @@ function highlight() {
 function dnaHighlight() {
     highlight bold_blue 'G'|highlight bold_red 'A'|highlight bold_green 'C'|highlight bold_yellow 'T'
 }
+
+function compcounts() {
+    pr -m -t -w $COLUMNS \
+       <(csvtk grep -t -f sample -p $1 $2|csvtk cut -t -f frequency,barcode|csvtk pretty -t) \
+       <(csvtk grep -t -f sample -p $1 $3|csvtk cut -t -f frequency,barcode|csvtk pretty -t)
+}
+
 
 ########################################
 #
