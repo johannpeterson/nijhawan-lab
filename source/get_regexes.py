@@ -32,6 +32,9 @@ parser.add_argument("-m", "--matches",
                     help="Specify a file to write a table of matching groups.",
                     type=argparse.FileType('w'), nargs='?',
                     default=sys.stdout)
+parser.add_argument("--distances",
+                    help="Write a table of Hamming distances between unique matching groups.",
+                    action="store_true")
 
 args = parser.parse_args()
 
@@ -85,6 +88,7 @@ def main():
                       'sequence': p['sequence'],
                       'direction': p['direction']
                       } for p in primers}
+    ic(primer_lookup)
 
     forward_primer_sequences = [primer_lookup[K]['sequence']
                                 for K in primer_lookup
@@ -147,6 +151,29 @@ def main():
         match_writer.writeheader()
         match_writer.writerows(match_table)
         # args.matches.close()
+
+    if args.distances:
+        fwd_matches = []
+        rev_matches = []
+        fwd_matches.extend([primer_matches(patterns['SEQ_FWD'],
+                                           primer_lookup[K]['sequence'],
+                                           K, pattern_label='SEQ_FWD')
+                            for K in primer_lookup if primer_lookup[K]['direction']=='F'])
+        rev_matches.extend([primer_matches(patterns['SEQ_REV'],
+                                           primer_lookup[K]['sequence'],
+                                           K, pattern_label='SEQ_REV')
+                            for K in primer_lookup if primer_lookup[K]['direction']=='R'])
+        ic(fwd_matches, rev_matches)
+        fwd_match_dict = {}
+        rev_match_dict = {}
+        for e in fwd_matches:
+            if e is not None:
+                fwd_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name','pattern']])
+        for e in rev_matches:
+            if e is not None:
+                rev_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name','pattern']])
+        ic(fwd_match_dict, rev_match_dict)
+
 
 
 if __name__ == '__main__':

@@ -162,6 +162,11 @@ function dnaHighlight() {
     highlight bold_blue 'G'|highlight bold_red 'A'|highlight bold_green 'C'|highlight bold_yellow 'T'
 }
 
+
+# Given two TSV files with fields sample, frequency and barcode, display them side-by-side.
+# Showing only rows with the matching sample name.
+# Requires csvtk.
+
 function compcounts() {
     pr -m -t -w $COLUMNS \
        <(csvtk grep -t -f sample -p $1 $2|csvtk cut -t -f frequency,barcode|csvtk pretty -t) \

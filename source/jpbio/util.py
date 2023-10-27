@@ -86,3 +86,9 @@ def common_sequence(seqs):
 
     return ''.join(list(map(elements_equal,
                             [[l[i] for l in seqs] for i in range(N)])))
+
+
+def hamming_distance(s1, s2):
+    if len(s1) != len(s2):
+        raise ValueError("hamming_distance: string arguments must have the same length")
+    return [s1[i] != s2[i] for i in range(len(s1))]
