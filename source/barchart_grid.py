@@ -8,7 +8,9 @@ Input should be in TSV format with fields fwd_primer, rev_primer, count, barcode
 
 import types
 import sys
+import os
 import argparse
+from email.utils import formatdate
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -21,12 +23,6 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("-d", "--debug",
                     help="Enable debugging output", action="store_true")
-parser.add_argument("infile", nargs='?',
-                    help="File to read from;  stdin if not provided.",
-                    type=argparse.FileType('r'), default=sys.stdin)
-parser.add_argument("outfile", nargs='?',
-                    help="File to write to;  stdout if not provided.",
-                    type=argparse.FileType('w'), default=sys.stdout)
 parser.add_argument("--top", type=int, default=10,
                     help="Number of barcodes to keep from each sample.")
 parser.add_argument("-e", "--experiment",
@@ -35,9 +31,23 @@ parser.add_argument("-e", "--experiment",
 parser.add_argument("--control",
                     type=str, action="append", default=["water"],
                     help="Sample names for the control samples.")
+# allowed metadata:
+# https://matplotlib.org/stable/api/backend_agg_api.html#matplotlib.backends.backend_agg.FigureCanvasAgg.print_png
+parser.add_argument("--metadata",
+                    type=str, action="append",
+                    help="Metadata to add to the saveg PNG figure.",
+                    default={'Software':'barchart_grid.py'})
+parser.add_argument("infile", nargs='?',
+                    help="File to read from;  stdin if not provided.",
+                    type=str, default='-')
+parser.add_argument("outfile", nargs='?',
+                    help="File to write to;  stdout if not provided.",
+                    type=argparse.FileType('w'), default=sys.stdout)
 # parser.add_argument...
 
 args = parser.parse_args()
+args.metadata['Title'] = 'Experiment: ' + args.experiment
+args.metadata['Creation Time'] = formatdate(timeval=None, localtime=False, usegmt=True)
 
 if not isinstance(ic, types.FunctionType):
     if args.debug:
@@ -54,7 +64,7 @@ ic(args)
 
 
 def annotate(data, **kwargs):
-    ic(kwargs)
+    # ic(kwargs)
     f = data.iloc[0]['forward_primer']
     r = data.iloc[0]['reverse_primer']
     n = data[(data['forward_primer'] == f) & (data['reverse_primer'] == r)].iloc[0]['count']
@@ -64,7 +74,7 @@ def annotate(data, **kwargs):
         sample = sample_dict.get((f,r), "???")
     else:
         sample = ""
-    ic(sample)
+    # ic(sample)
         
     ax = plt.gca()
     if sample in args.control:
@@ -137,7 +147,18 @@ def main():
     """main
     """
     ic(args.control)
-    df = pd.read_csv(args.infile, sep='\t', header=0)
+    ic(args.infile, args.outfile)
+    if args.infile == '-':
+        with sys.stdin as f:
+            df = pd.read_csv(args.infile, sep='\t', header=0)
+    elif args.infile.endswith('.tsv'):
+        with open(os.path.abspath(args.infile), 'r', encoding="utf-8") as f:
+            df = pd.read_csv(f, sep='\t', header=0)
+    elif args.infile.endswith('.xlsx'):
+        with open(os.path.abspath(args.infile), 'rb') as f:
+            df = pd.read_excel(f)
+    else:
+        raise FileNotFoundError("Must have a .tsv or .xlsx file to read, or TSV text from stdin.")
     ic(df.head)
     sorted_counts = df.sort_values(['forward_primer','reverse_primer','count'], ascending=[True,True,False])
     ic(sorted_counts.head)
@@ -145,10 +166,12 @@ def main():
                          .nth(list(range(args.top))) \
                          .reset_index() \
                          .astype({'barcode':'str', 'forward_primer':'category', 'reverse_primer':'category'})
-    top_n.to_csv(args.outfile, sep='\t', header=True, index=False)
+    top_n.to_csv(args.outfile,
+                 columns = ['forward_primer', 'reverse_primer', 'sample', 'barcode', 'count'],
+                 sep='\t', header=True, index=False)
     sample_dict = compute_sample_dict(sorted_counts)
     figure = make_plot_grid(top_n, sample_dict, expname=args.experiment)
-    figure.savefig("barchart.png")
+    figure.savefig("barchart.png", metadata=args.metadata)
 
 
 if __name__ == '__main__':
