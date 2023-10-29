@@ -21,19 +21,19 @@ except ImportError:  # Graceful fallback if IceCream isn't installed.
     ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("-d", "--debug",
+parser.add_argument("--debug", "-d",
                     help="Enable debugging output", action="store_true")
 parser.add_argument("--top", type=int, default=10,
                     help="Number of barcodes to keep from each sample.")
-parser.add_argument("-e", "--experiment",
+parser.add_argument("--experiment", "-e",
                     type=str, default="",
                     help="Name of the experiment for plot title.")
-parser.add_argument("--control",
+parser.add_argument("--control", "-c",
                     type=str, action="append", default=["water"],
                     help="Sample names for the control samples.")
 # allowed metadata:
 # https://matplotlib.org/stable/api/backend_agg_api.html#matplotlib.backends.backend_agg.FigureCanvasAgg.print_png
-parser.add_argument("--metadata",
+parser.add_argument("--metadata", "-m",
                     type=str, action="append",
                     help="Metadata to add to the saveg PNG figure.",
                     default={'Software':'barchart_grid.py'})
@@ -64,10 +64,15 @@ ic(args)
 
 
 def annotate(data, **kwargs):
+    """annotate
+    Called for each facet in the FacetGrid created in make_plot_grid
+    Adds the textual annotation of the sample name & total count,
+    and colors the background if the sample is a control.
+    """
     # ic(kwargs)
     f = data.iloc[0]['forward_primer']
     r = data.iloc[0]['reverse_primer']
-    n = data[(data['forward_primer'] == f) & (data['reverse_primer'] == r)].iloc[0]['count']
+    n = data['count'].sum()
 
     sample_dict = kwargs.get('sample_dict')
     if sample_dict is not None:
@@ -88,6 +93,9 @@ def annotate(data, **kwargs):
 
 
 def make_plot_grid(data, sample_dict, expname="experiment"):
+    """make_plot_grid
+    Generates the FacetGrid of bar charts showing the counts for each barcode in a sample.
+    """
     sns.set_style()
     sns.set_style("dark")
     sns.set_context("paper")
@@ -97,7 +105,7 @@ def make_plot_grid(data, sample_dict, expname="experiment"):
         col="reverse_primer",
         height=2.5, aspect=1,
         margin_titles=True,
-        sharex=False,
+        sharex=True,
         sharey=False
     )
     hist_grid.fig.set_constrained_layout(True)
@@ -121,6 +129,10 @@ def make_plot_grid(data, sample_dict, expname="experiment"):
 
 
 def compute_sample_dict(data):
+    """compute_sample_dict
+    Uses the first sample name for each pair of primers to assign sample names
+    in a dictionary.  Used by annotate in the FacetGrid.
+    """
     full_sample_dict =  data.groupby(by=['forward_primer','reverse_primer']) \
                        .first() \
                        .reset_index() \
@@ -150,7 +162,7 @@ def main():
     ic(args.infile, args.outfile)
     if args.infile == '-':
         with sys.stdin as f:
-            df = pd.read_csv(args.infile, sep='\t', header=0)
+            df = pd.read_csv(sys.stdin, sep='\t', header=0)
     elif args.infile.endswith('.tsv'):
         with open(os.path.abspath(args.infile), 'r', encoding="utf-8") as f:
             df = pd.read_csv(f, sep='\t', header=0)
@@ -166,8 +178,13 @@ def main():
                          .nth(list(range(args.top))) \
                          .reset_index() \
                          .astype({'barcode':'str', 'forward_primer':'category', 'reverse_primer':'category'})
+
+    # input data set may or may not contain a 'sample' column.
+    full_column_list = ['forward_primer', 'reverse_primer', 'sample', 'barcode', 'count']
+    input_column_set = set(top_n.columns)
+    output_columns = [c for c in full_column_list if c in input_column_set]
     top_n.to_csv(args.outfile,
-                 columns = ['forward_primer', 'reverse_primer', 'sample', 'barcode', 'count'],
+                 columns = output_columns,
                  sep='\t', header=True, index=False)
     sample_dict = compute_sample_dict(sorted_counts)
     figure = make_plot_grid(top_n, sample_dict, expname=args.experiment)
