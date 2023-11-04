@@ -33,6 +33,8 @@ parser.add_argument("--control", "-c",
                     help="Sample names for the control samples.")
 # allowed metadata:
 # https://matplotlib.org/stable/api/backend_agg_api.html#matplotlib.backends.backend_agg.FigureCanvasAgg.print_png
+parser.add_argument("--png", type=str, default="barchart.png",
+                    help="Name for the graphics output file containing the grid of barcharts.")
 parser.add_argument("--metadata", "-m",
                     type=str, action="append",
                     help="Metadata to add to the saveg PNG figure.",
@@ -188,7 +190,7 @@ def main():
                  sep='\t', header=True, index=False)
     sample_dict = compute_sample_dict(sorted_counts)
     figure = make_plot_grid(top_n, sample_dict, expname=args.experiment)
-    figure.savefig("barchart.png", metadata=args.metadata)
+    figure.savefig(args.png, metadata=args.metadata)
 
 
 if __name__ == '__main__':
