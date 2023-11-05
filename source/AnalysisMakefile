@@ -2,6 +2,8 @@
 .ONESHELL:
 SHELL=/bin/zsh
 
+TOP_N=10
+
 # input files
 R1_FILE=$(firstword $(wildcard *_R1_*.fastq.gz))
 R2_FILE=$(firstword $(wildcard *_R2_*.fastq.gz))
@@ -18,7 +20,7 @@ COUNT_BARCODES=$(SOURCEDIR)/count_barcodes.sh
 FLATTEN_SAMPLES=$(SOURCEDIR)/flatten_samples.py
 FLASH=flash2 -M 230
 BARCHART_GRID=$(SOURCEDIR)/barchart_grid.py
-MAKE_BARCHART=$(BARCHART_GRID) --top 10 --experiment $(PREFIX) --control W1 --control W2 --control W3
+MAKE_BARCHART=$(BARCHART_GRID) --top $(TOP_N) --experiment $(PREFIX) --control W1 --control W2 --control W3
 
 # input files
 BARCODE_PATTERNS_FILE=./barcode_patterns.py
@@ -31,31 +33,35 @@ PATTERNS=patterns.py
 MATCHES=matches.tsv
 BARCODE_TABLE=barcode_table.tsv
 BARCODE_COUNTS=barcode_counts.tsv
+COUNT_REGEX_OUTPUT=count_regex_output.txt
 BARCODE_COUNTS_SAMPLES=barcode_counts_samples.tsv
 FLAT_SAMPLES=flat_samples.tsv
 COUNTS=totals_by_sample.tsv
 FLASH_LOG=flash.log
 BARCHARTS=$(PREFIX)_barchart.png
+LOGFILE=$(PREFIX).log
+TOP_N_FILE=$(PREFIX)_top_$(TOP_N).tsv
 
 MATCHFILE_FWD=matchfile_fwd.tsv
 MATCHFILE_REV=matchfile_rev.tsv
 MATCHFILE_FWD_RC=matchfile_fwd_rc.tsv
 MATCHFILE_REV_RC=matchfile_rev_rc.tsv
 
-
 INTERMEDIATE_FILES=$(PATTERNS) $(MATCHES) $(BARCODE_TABLE) $(BARCODE_COUNTS) \
 	$(BARCODE_COUNTS_SAMPLES) $(FLAT_SAMPLES) $(COUNTS) $(FLASH_LOG) \
-	$(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC)
+	$(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) \
+	$(COUNT_REGEX_OUTPUT)
 RESULT_FILES=$(MERGED_READS) $(BARCODE_COUNTS_SAMPLES) $(BARCHARTS)
 
-## all: run all steps necessary to produce the barchart grip
+## all: run all steps necessary to produce the barchart grip (default action)
 all : $(COUNTS) $(BARCHARTS)
 
 ## settings: show the values of variables
 settings :
+	@echo "PREFIX (experiment):" $(PREFIX)
 	@echo R1_FILE: $(R1_FILE)
 	@echo R2_FILE: $(R2_FILE)
-	@echo PREFIX: $(PREFIX)
+	@echo TOP_N: $(TOP_N)
 	@echo
 	@echo BARCODE_PATTERNS_FILE: $(BARCODE_PATTERNS_FILE)
 	@echo PRIMERS_FILE: $(PRIMERS_FILE)
@@ -70,6 +76,8 @@ settings :
 	@echo COUNT_BARCODES: $(COUNT_BARCODES)
 	@echo FLATTEN_SAMPLES: $(FLATTEN_SAMPLES)
 	@echo FLASH_LOG: $(FLASH_LOG)
+	@echo LOGFILE: $(LOGFILE)
+	@echo TOP_N_FILE: $(TOP_N_FILE)
 
 ## clean: remove intermediate files, leaving barchart.png and merged.fastq
 clean :
@@ -84,7 +92,6 @@ cleanall :
 help :
 	@grep '^##' ./Makefile
 
-# flash2 -M 230 ../VK022_R1_001.fastq.gz ../VK022_R2_001.fastq.gz 2>&1 | tee flash.log
 $(MERGED_READS) : $(R1_FILE) $(R2_FILE)
 	$(FLASH) --to-stdout $(R1_FILE) $(R2_FILE) 2>$(FLASH_LOG) >$(MERGED_READS)
 
@@ -99,7 +106,8 @@ $(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) $(PATT
 	$(GET_REGEXES) $(PRIMERS_FILE) --patterns $(PATTERNS) | $(SEPARATE_MATCHTABLE)
 
 $(MATCHES) : $(MERGED_READS) $(PATTERNS) $(BARCODE_PATTERNS_FILE) $(COUNT_REGEX)
-	$(COUNT_REGEX) -s $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES)
+	$(COUNT_REGEX) -s $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES) \
+	> $(COUNT_REGEX_OUTPUT)
 
 $(BARCODE_TABLE) : $(MATCHES) $(JOIN_MATCHES) $(MERGE_NAMES)
 	$(JOIN_MATCHES) < $(MATCHES) | $(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
@@ -117,42 +125,4 @@ $(COUNTS) : $(BARCODE_COUNTS_SAMPLES)
 	csvtk summary -t -g sample,fwd_primer,rev_primer -f frequency:sum $(BARCODE_COUNTS_SAMPLES) > $(COUNTS)
 
 $(BARCHARTS) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
-	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES)
-
-# # Required input files:
-# MERGED_READS=$1
-# BARCODE_PATTERNS=barcode_patterns.py
-# PRIMERS=primers.txt
-# SAMPLES=samples.tsv
-
-# # Intermediate and result files:
-# PATTERNS=patterns.py
-# MATCHES=matches.tsv
-# BARCODE_TABLE=barcode_table.tsv
-# BARCODE_COUNTS=barcode_counts.tsv
-# BARCODE_COUNTS_SAMPLES=barcode_counts_samples.tsv
-# FLAT_SAMPLES=flat_samples.tsv
-# COUNTS=totals_by_sample.tsv
-
-# echo "get_regexes.py"
-# echo "separate_matchtable.awk"
-# $SOURCEDIR/get_regexes.py $PRIMERS --patterns $PATTERNS | $SOURCEDIR/separate_matchtable.awk
-
-# echo "count_regex.py"
-# $SOURCEDIR/count_regex.py -s $MERGED_READS -p $PATTERNS -p $BARCODE_PATTERNS -s --out $MATCHES
-
-# echo "join_matches.sh | merge_names.awk"
-# $SOURCEDIR/join_matches.sh < $MATCHES | \
-#     $SOURCEDIR/merge_names.awk -v FILTER=1 > $BARCODE_TABLE
-
-# echo "Compute barcode counts"
-# $SOURCEDIR/count_barcodes.sh < $BARCODE_TABLE > $BARCODE_COUNTS
-
-# echo "Flatten samples table"
-# $SOURCEDIR/flatten_samples.py $SAMPLES $FLAT_SAMPLES
-
-# echo "Join with sample names"
-# csvtk join -t --left-join -f "fwd_primer,rev_primer" $BARCODE_COUNTS $FLAT_SAMPLES > $BARCODE_COUNTS_SAMPLES
-
-# echo "Compute totals for each sample."
-# csvtk summary -t -g sample,fwd_primer,rev_primer -f frequency:sum $BARCODE_COUNTS_SAMPLES > $COUNTS
+	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE)
