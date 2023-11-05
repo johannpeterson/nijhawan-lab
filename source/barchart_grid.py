@@ -103,8 +103,8 @@ def make_plot_grid(data, sample_dict, expname="experiment"):
     sns.set_context("paper")
     hist_grid = sns.FacetGrid(
         data,
-        row="forward_primer",
-        col="reverse_primer",
+        row='forward_primer',
+        col='reverse_primer',
         height=2.5, aspect=1,
         margin_titles=True,
         sharex=True,
@@ -174,17 +174,34 @@ def main():
     else:
         raise FileNotFoundError("Must have a .tsv or .xlsx file to read, or TSV text from stdin.")
     ic(df.head)
+
+    # input data set may or may not contain a 'sample' column.
+    input_column_set = set(df.columns)
+    df.rename(
+        columns={
+            'fwd_primer':'forward_primer',
+            'rev_primer':'reverse_primer',
+            'frequency':'count'},
+        inplace=True
+    )
+    ic(df.head)
+    #fp_col_name, = input_column_set.intersection({'forward_primer', 'fwd_primer'})
+    #rp_col_name, = input_column_set.intersection({'reverse_primer', 'rev_primer'})
+    #count_col_name, = input_column_set.intersection({'count', 'frequency'})
+    #sort_columns = [fp_col_name, rp_col_name, count_col_name]
+    #group_columns = [fp_col_name, rp_col_name]
+    full_column_list = ['forward_primer', 'reverse_primer', 'sample', 'barcode', 'count']
+    output_columns = [c for c in full_column_list if c in input_column_set]
+    #ic(fp_col_name, rp_col_name, sort_columns, group_columns, output_columns)
+    column_types = {'barcode':'str', 'forward_primer':'category', 'reverse_primer':'category'}
+    
     sorted_counts = df.sort_values(['forward_primer','reverse_primer','count'], ascending=[True,True,False])
     ic(sorted_counts.head)
     top_n = sorted_counts.groupby(by=['forward_primer','reverse_primer']) \
                          .nth(list(range(args.top))) \
                          .reset_index() \
-                         .astype({'barcode':'str', 'forward_primer':'category', 'reverse_primer':'category'})
+                         .astype(column_types)
 
-    # input data set may or may not contain a 'sample' column.
-    full_column_list = ['forward_primer', 'reverse_primer', 'sample', 'barcode', 'count']
-    input_column_set = set(top_n.columns)
-    output_columns = [c for c in full_column_list if c in input_column_set]
     top_n.to_csv(args.outfile,
                  columns = output_columns,
                  sep='\t', header=True, index=False)
