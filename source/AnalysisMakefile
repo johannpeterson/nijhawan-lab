@@ -2,9 +2,11 @@
 .ONESHELL:
 SHELL=/bin/zsh
 
+# use the top N reads to make the bar charts
 TOP_N=10
 
 # input files
+# Infer the paired read files based on filenames.
 R1_FILE=$(firstword $(wildcard *_R1_*.fastq.gz))
 R2_FILE=$(firstword $(wildcard *_R2_*.fastq.gz))
 PREFIX=$(firstword $(subst _, ,$(R1_FILE)))
@@ -14,7 +16,7 @@ SOURCEDIR=~/bio/nijhawanlab/source
 DESTDIR=./aligned
 GET_REGEXES=$(SOURCEDIR)/get_regexes.py
 COUNT_REGEX=$(SOURCEDIR)/count_regex.py
-JOIN_MATCHES=$(SOURCEDIR)/join_matches.sh
+JOIN_MATCHES=$(SOURCEDIR)/join_matches.sh # no longer used
 SEPARATE_MATCHTABLE=$(SOURCEDIR)/separate_matchtable.awk
 MERGE_NAMES=$(SOURCEDIR)/merge_names.awk
 COUNT_BARCODES=$(SOURCEDIR)/count_barcodes.sh
@@ -72,18 +74,21 @@ settings :
 	@echo SAMPLES_FILE: $(SAMPLES_FILE)
 	@echo
 	@echo Executables
+	@echo FLASH: $(FLASH)
 	@echo GET_REGEXES: $(GET_REGEXES)
 	@echo COUNT_REGEX: $(COUNT_REGEX)
-	@echo JOIN_MATCHES: $(JOIN_MATCHES)
 	@echo SEPARATE_MATCHTABLE: $(SEPARATE_MATCHTABLE)
 	@echo MERGE_NAMES: $(MERGE_NAMES)
 	@echo COUNT_BARCODES: $(COUNT_BARCODES)
 	@echo FLATTEN_SAMPLES: $(FLATTEN_SAMPLES)
+	@echo MAKE_BARCHART: $(MAKE_BARCHART)
 	@echo
 	@echo Output
-	@echo FLASH_LOG: $(FLASH_LOG)
-	@echo LOGFILE: $(LOGFILE)
+	@echo BARCHARTS: $(BARCHARTS)
+	@echo MERGED_READS: $(MERGED_READS)
+	@echo BARCODE_COUNTS_SAMPLES: $(BARCODE_COUNTS_SAMPLES)
 	@echo TOP_N_FILE: $(TOP_N_FILE)
+	@echo INTERMEDIATE_FILES: $(INTERMEDIATE_FILES)
 
 ## clean: remove intermediate files, leaving barchart.png and merged.fastq
 clean :
@@ -121,13 +126,13 @@ $(MATCHES) : $(MERGED_READS) $(PATTERNS) $(BARCODE_PATTERNS_FILE) $(COUNT_REGEX)
 	> $(COUNT_REGEX_OUTPUT)
 
 $(BARCODE_TABLE) : $(MATCHES) $(JOIN_MATCHES) $(MERGE_NAMES)
-	# $(JOIN_MATCHES) < $(MATCHES) | $(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
+# join_matches.sh is reproduced here so we can use our filename variables easily
+# was: $(JOIN_MATCHES) < $(MATCHES) | $(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
 	csvtk join --left-join -t --fields "seq_fwd_1;seq_fwd_1" $(MATCHES) $(MATCHFILE_FWD) | \
 	csvtk join --left-join -t --fields "seq_rev_1;seq_rev_1" - $(MATCHFILE_REV) | \
 	csvtk join --left-join -t --fields "seq_fwd_rc_1;seq_fwd_rc_1" - $(MATCHFILE_FWD_RC) | \
 	csvtk join --left-join -t --fields "seq_rev_rc_1;seq_rev_rc_1" - $(MATCHFILE_REV_RC) | \
 	$(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
-
 
 $(BARCODE_COUNTS) : $(BARCODE_TABLE) $(COUNT_BARCODES)
 	$(COUNT_BARCODES) < $(BARCODE_TABLE) > $(BARCODE_COUNTS)
@@ -143,3 +148,4 @@ $(COUNTS) : $(BARCODE_COUNTS_SAMPLES)
 
 $(BARCHARTS) $(TOP_N_FILE) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
 	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE) 2>>$(LOGFILE)
+# stderr redirected to a log mostly because there are some annoying layout errors coming from barchart_grid.py
