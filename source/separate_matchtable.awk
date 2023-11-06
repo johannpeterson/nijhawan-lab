@@ -1,10 +1,18 @@
 #! awk -f
 
 BEGIN {
-    FILE_FWD="matchfile_fwd.tsv"
-    FILE_REV="matchfile_rev.tsv"
-    FILE_FWD_RC="matchfile_fwd_rc.tsv"
-    FILE_REV_RC="matchfile_rev_rc.tsv"
+    if (! FILE_FWD) {
+        FILE_FWD="matchfile_fwd.tsv"
+    }
+    if (! FILE_REV) {
+        FILE_REV="matchfile_rev.tsv"
+    }
+    if (! FILE_FWD_RC) {
+        FILE_FWD_RC="matchfile_fwd_rc.tsv"
+    }
+    if (! FILE_REV_RC) {
+        FILE_REV_RC="matchfile_rev_rc.tsv"
+    }
     FS="\t"
     OFS="\t"
     print "name_fwd","seq_fwd_1" > FILE_FWD

@@ -11,6 +11,7 @@ PREFIX=$(firstword $(subst _, ,$(R1_FILE)))
 
 # executables
 SOURCEDIR=~/bio/nijhawanlab/source
+DESTDIR=./aligned
 GET_REGEXES=$(SOURCEDIR)/get_regexes.py
 COUNT_REGEX=$(SOURCEDIR)/count_regex.py
 JOIN_MATCHES=$(SOURCEDIR)/join_matches.sh
@@ -28,46 +29,49 @@ PRIMERS_FILE=./primers.txt
 SAMPLES_FILE=./$(PREFIX)_samples.tsv
 
 # Intermediate and result files
-MERGED_READS=$(PREFIX)_merged.fastq
-PATTERNS=patterns.py
-MATCHES=matches.tsv
-BARCODE_TABLE=barcode_table.tsv
-BARCODE_COUNTS=barcode_counts.tsv
-COUNT_REGEX_OUTPUT=count_regex_output.txt
-BARCODE_COUNTS_SAMPLES=barcode_counts_samples.tsv
-FLAT_SAMPLES=flat_samples.tsv
-COUNTS=totals_by_sample.tsv
-FLASH_LOG=flash.log
-BARCHARTS=$(PREFIX)_barchart.png
-LOGFILE=$(PREFIX).log
-TOP_N_FILE=$(PREFIX)_top_$(TOP_N).tsv
+MERGED_READS=$(DESTDIR)/$(PREFIX)_merged.fastq
+PATTERNS=$(DESTDIR)/$(PREFIX)_patterns.py
+MATCHES=$(DESTDIR)/$(PREFIX)_matches.tsv
+BARCODE_TABLE=$(DESTDIR)/$(PREFIX)_barcode_table.tsv
+BARCODE_COUNTS=$(DESTDIR)/$(PREFIX)_barcode_counts.tsv
+COUNT_REGEX_OUTPUT=$(DESTDIR)/$(PREFIX)_count_regex_output.txt
+BARCODE_COUNTS_SAMPLES=$(DESTDIR)/$(PREFIX)_barcode_counts_samples.tsv
+FLAT_SAMPLES=$(DESTDIR)/$(PREFIX)_flat_samples.tsv
+COUNTS=$(DESTDIR)/$(PREFIX)_totals_by_sample.tsv
+FLASH_LOG=$(DESTDIR)/$(PREFIX)_flash.log
+BARCHARTS=$(DESTDIR)/$(PREFIX)_barchart.png
+LOGFILE=$(DESTDIR)/$(PREFIX).log
+TOP_N_FILE=$(DESTDIR)/$(PREFIX)_top_$(TOP_N).tsv
 
-MATCHFILE_FWD=matchfile_fwd.tsv
-MATCHFILE_REV=matchfile_rev.tsv
-MATCHFILE_FWD_RC=matchfile_fwd_rc.tsv
-MATCHFILE_REV_RC=matchfile_rev_rc.tsv
+MATCHFILE_FWD=$(DESTDIR)/$(PREFIX)_matchfile_fwd.tsv
+MATCHFILE_REV=$(DESTDIR)/$(PREFIX)_matchfile_rev.tsv
+MATCHFILE_FWD_RC=$(DESTDIR)/$(PREFIX)_matchfile_fwd_rc.tsv
+MATCHFILE_REV_RC=$(DESTDIR)/$(PREFIX)_matchfile_rev_rc.tsv
 
 INTERMEDIATE_FILES=$(PATTERNS) $(MATCHES) $(BARCODE_TABLE) $(BARCODE_COUNTS) \
 	$(BARCODE_COUNTS_SAMPLES) $(FLAT_SAMPLES) $(COUNTS) $(FLASH_LOG) \
 	$(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) \
-	$(COUNT_REGEX_OUTPUT)
-RESULT_FILES=$(MERGED_READS) $(BARCODE_COUNTS_SAMPLES) $(BARCHARTS)
+	$(COUNT_REGEX_OUTPUT) $(LOGFILE)
+RESULT_FILES=$(MERGED_READS) $(BARCODE_COUNTS_SAMPLES) $(BARCHARTS) $(TOP_N_FILE)
 
 ## all: run all steps necessary to produce the barchart grip (default action)
-all : $(COUNTS) $(BARCHARTS)
+all : $(TOP_N_FILE) $(BARCHARTS)
 
 ## settings: show the values of variables
 settings :
 	@echo "PREFIX (experiment):" $(PREFIX)
-	@echo R1_FILE: $(R1_FILE)
-	@echo R2_FILE: $(R2_FILE)
+	@echo SOURCEDIR: $(SOURCEDIR)
+	@echo DESTDIR: $(DESTDIR)
 	@echo TOP_N: $(TOP_N)
 	@echo
+	@echo Input
+	@echo R1_FILE: $(R1_FILE)
+	@echo R2_FILE: $(R2_FILE)
 	@echo BARCODE_PATTERNS_FILE: $(BARCODE_PATTERNS_FILE)
 	@echo PRIMERS_FILE: $(PRIMERS_FILE)
 	@echo SAMPLES_FILE: $(SAMPLES_FILE)
 	@echo
-	@echo SOURCEDIR: $(SOURCEDIR)
+	@echo Executables
 	@echo GET_REGEXES: $(GET_REGEXES)
 	@echo COUNT_REGEX: $(COUNT_REGEX)
 	@echo JOIN_MATCHES: $(JOIN_MATCHES)
@@ -75,6 +79,8 @@ settings :
 	@echo MERGE_NAMES: $(MERGE_NAMES)
 	@echo COUNT_BARCODES: $(COUNT_BARCODES)
 	@echo FLATTEN_SAMPLES: $(FLATTEN_SAMPLES)
+	@echo
+	@echo Output
 	@echo FLASH_LOG: $(FLASH_LOG)
 	@echo LOGFILE: $(LOGFILE)
 	@echo TOP_N_FILE: $(TOP_N_FILE)
@@ -92,7 +98,10 @@ cleanall :
 help :
 	@grep '^##' ./Makefile
 
-$(MERGED_READS) : $(R1_FILE) $(R2_FILE)
+$(DESTDIR) :
+	mkdir -p $(DESTDIR)
+
+$(MERGED_READS) : $(R1_FILE) $(R2_FILE) $(DESTDIR)
 	$(FLASH) --to-stdout $(R1_FILE) $(R2_FILE) 2>$(FLASH_LOG) >$(MERGED_READS)
 
 ## merge: run flash2 to merge the paired reads (R1 & R2 files) into _merged.fastq
@@ -103,14 +112,22 @@ $(BARCODE_PATTERNS_FILE) : $(SOURCEDIR)/barcode_patterns.py
 
 $(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) $(PATTERNS) : \
 	$(PRIMERS_FILE) $(GET_REGEXES) $(SEPARATE_MATCHTABLE)
-	$(GET_REGEXES) $(PRIMERS_FILE) --patterns $(PATTERNS) | $(SEPARATE_MATCHTABLE)
+	$(GET_REGEXES) $(PRIMERS_FILE) --patterns $(PATTERNS) | \
+	$(SEPARATE_MATCHTABLE) -v FILE_FWD=$(MATCHFILE_FWD) -v FILE_REV=$(MATCHFILE_REV) \
+		-v FILE_FWD_RC=$(MATCHFILE_FWD_RC) -v FILE_REV_RC=$(MATCHFILE_REV_RC)
 
 $(MATCHES) : $(MERGED_READS) $(PATTERNS) $(BARCODE_PATTERNS_FILE) $(COUNT_REGEX)
 	$(COUNT_REGEX) -s $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES) \
 	> $(COUNT_REGEX_OUTPUT)
 
 $(BARCODE_TABLE) : $(MATCHES) $(JOIN_MATCHES) $(MERGE_NAMES)
-	$(JOIN_MATCHES) < $(MATCHES) | $(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
+	# $(JOIN_MATCHES) < $(MATCHES) | $(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
+	csvtk join --left-join -t --fields "seq_fwd_1;seq_fwd_1" $(MATCHES) $(MATCHFILE_FWD) | \
+	csvtk join --left-join -t --fields "seq_rev_1;seq_rev_1" - $(MATCHFILE_REV) | \
+	csvtk join --left-join -t --fields "seq_fwd_rc_1;seq_fwd_rc_1" - $(MATCHFILE_FWD_RC) | \
+	csvtk join --left-join -t --fields "seq_rev_rc_1;seq_rev_rc_1" - $(MATCHFILE_REV_RC) | \
+	$(MERGE_NAMES) -v FILTER=1 > $(BARCODE_TABLE)
+
 
 $(BARCODE_COUNTS) : $(BARCODE_TABLE) $(COUNT_BARCODES)
 	$(COUNT_BARCODES) < $(BARCODE_TABLE) > $(BARCODE_COUNTS)
@@ -124,5 +141,5 @@ $(BARCODE_COUNTS_SAMPLES) : $(BARCODE_COUNTS) $(FLAT_SAMPLES)
 $(COUNTS) : $(BARCODE_COUNTS_SAMPLES)
 	csvtk summary -t -g sample,fwd_primer,rev_primer -f frequency:sum $(BARCODE_COUNTS_SAMPLES) > $(COUNTS)
 
-$(BARCHARTS) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
-	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE)
+$(BARCHARTS) $(TOP_N_FILE) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
+	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE) 2>>$(LOGFILE)
