@@ -1,4 +1,4 @@
-.PHONY: settings help merge
+.PHONY: settings help clean cleanall merge matches
 .ONESHELL:
 SHELL=/bin/zsh
 
@@ -126,6 +126,9 @@ $(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) $(PATT
 $(MATCHES) : $(MERGED_READS) $(PATTERNS) $(BARCODE_PATTERNS_FILE) $(COUNT_REGEX)
 	$(COUNT_REGEX) $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES) \
 	> $(COUNT_REGEX_OUTPUT)
+
+## matches: Compute regex matches using count_regex.py
+matches : $(MATCHES)
 
 $(BARCODE_TABLE) : $(MATCHES) $(JOIN_MATCHES) $(MERGE_NAMES)
 # join_matches.sh is reproduced here so we can use our filename variables easily
