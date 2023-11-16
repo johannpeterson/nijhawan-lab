@@ -92,7 +92,6 @@ def main():
     match_counts = {k: 0 for k in patterns}
     column_names = [group_name for r in regexes.values()
                     for group_name in r.groupindex.keys()]
-    row_count = 0
 
     # set up table writer for writing regex match groups
     if args.out is not None:
@@ -113,8 +112,7 @@ def main():
 
     # read FASTQ file and attempt to match all regular expressions
     reads = SeqIO.parse(args.fastq_file, "fastq")
-    for read in itertools.islice(reads, args.limit):
-        row_count += 1
+    for read, row_count in zip(itertools.islice(reads, args.limit), itertools.count(start=0)):
         match_groups = {name: None for name in column_names}
         seq = str(read.seq)
         if args.seq:
