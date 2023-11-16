@@ -106,12 +106,14 @@ help :
 $(DESTDIR) :
 	mkdir -p $(DESTDIR)
 
+# merge two paired .fastq files into one file
 $(MERGED_READS) : $(R1_FILE) $(R2_FILE) $(DESTDIR)
 	$(FLASH) --to-stdout $(R1_FILE) $(R2_FILE) 2>$(FLASH_LOG) >$(MERGED_READS)
 
 ## merge: run flash2 to merge the paired reads (R1 & R2 files) into _merged.fastq
 merge : $(MERGED_READS)
 
+# obtain the barcode patterns from the source directory
 $(BARCODE_PATTERNS_FILE) : $(SOURCEDIR)/barcode_patterns.py
 	cp $(SOURCEDIR)/barcode_patterns.py ./$(BARCODE_PATTERNS_FILE)
 
@@ -122,7 +124,7 @@ $(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) $(PATT
 		-v FILE_FWD_RC=$(MATCHFILE_FWD_RC) -v FILE_REV_RC=$(MATCHFILE_REV_RC)
 
 $(MATCHES) : $(MERGED_READS) $(PATTERNS) $(BARCODE_PATTERNS_FILE) $(COUNT_REGEX)
-	$(COUNT_REGEX) -s $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES) \
+	$(COUNT_REGEX) $(MERGED_READS) -p $(PATTERNS) -p $(BARCODE_PATTERNS_FILE) -s --out $(MATCHES) \
 	> $(COUNT_REGEX_OUTPUT)
 
 $(BARCODE_TABLE) : $(MATCHES) $(JOIN_MATCHES) $(MERGE_NAMES)
@@ -148,4 +150,4 @@ $(COUNTS) : $(BARCODE_COUNTS_SAMPLES)
 
 $(BARCHARTS) $(TOP_N_FILE) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
 	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE) 2>>$(LOGFILE)
-# stderr redirected to a log mostly because there are some annoying layout errors coming from barchart_grid.py
+# stderr redirected to a log mostly because there are some annoying layout warnings coming from barchart_grid.py
