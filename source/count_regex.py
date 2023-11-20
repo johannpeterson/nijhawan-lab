@@ -8,7 +8,7 @@ of pattern names mapped to regular expressions, and a FASTQ file.
 import argparse
 import sys
 import csv
-import itertools
+from itertools import count, islice
 import types
 import regex
 from Bio import SeqIO
@@ -30,6 +30,8 @@ parser.add_argument("-l", "--limit", help="Stop after reading LIMIT pairs of rea
 parser.add_argument("-d", "--debug", help="Enable debugging output", action="store_true")
 parser.add_argument("-o", "--out",
                     help="Write a table (tsv) of the named groups matching each line.",
+                    type=argparse.FileType('w'), default=None)
+parser.add_argument("-f", "--fastq_out", help="Output FASTQ file with annotations.",
                     type=argparse.FileType('w'), default=None)
 parser.add_argument("-s", "--stats", help="Output statistics including match counts.",
                     action="store_true")
@@ -74,6 +76,29 @@ def import_patterns(pattern_file):
     return pattern_imports["patterns"]
 
 
+def format_dict(d):
+    """Format the dictionary of regex matches for writing to the
+    FASTQ sequence identifier line."""
+    return ":".join([k + '=' + d[k] for k in d if d[k] is not None])
+
+
+def parse_fastq_id(s):
+    """Parse the sequence identifier line from FASTQ reads.
+    return as a dictionary.
+    Illumina FASTQ id format:
+    @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control number>:<sample number>"""
+    instrument, runid, flowcellid, lane, tile, x, y = s.id.split(':')
+    return {
+        "instrument": instrument,
+        "runid": runid,
+        "flowcellid": flowcellid,
+        "lane": lane,
+        "tile": tile,
+        "x": x,
+        "y": y
+    }
+
+   
 def main():
     """main
     Read the patterns file(s).  Loop throuth the FASTQ file
@@ -112,11 +137,9 @@ def main():
 
     # read FASTQ file and attempt to match all regular expressions
     reads = SeqIO.parse(args.fastq_file, "fastq")
-    for read, row_count in zip(itertools.islice(reads, args.limit), itertools.count(start=0)):
+    for read, row_count in zip(islice(reads, args.limit), count(start=0)):
         match_groups = {name: None for name in column_names}
         seq = str(read.seq)
-        if args.seq:
-            print(seq)
         for label, re in regexes.items():
             re_match = re.search(seq)
             if args.verbose:
@@ -126,6 +149,13 @@ def main():
                 for group_name, group_value in re_match.groupdict().items():
                     match_groups[group_name] = group_value
                 # ic(match_groups)
+        if args.seq:
+            print(seq)
+            print(parse_fastq_id(read))
+            print(format_dict(match_groups))
+        if args.fastq_out:
+            read.description = format_dict(match_groups)
+            args.fastq_out.write(read.format("fastq"))
         if args.out:
             table_writer.writerow(match_groups)
 
