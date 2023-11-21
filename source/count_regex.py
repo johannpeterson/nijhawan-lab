@@ -154,7 +154,9 @@ def main():
             print(parse_fastq_id(read))
             print(format_dict(match_groups))
         if args.fastq_out:
-            read.description = format_dict(match_groups)
+            read.id = read.id + ":" + format_dict(match_groups)
+            # read.description = format_dict(match_groups)
+            read.description = ""
             args.fastq_out.write(read.format("fastq"))
         if args.out:
             table_writer.writerow(match_groups)

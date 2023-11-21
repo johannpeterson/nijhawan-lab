@@ -32,8 +32,11 @@ parser.add_argument("-m", "--matches",
                     help="Specify a file to write a table of matching groups.",
                     type=argparse.FileType('w'), nargs='?',
                     default=sys.stdout)
+parser.add_argument("-s", "--sed",
+                    help="Specify a file to write sed commands to, for replacing tags in FASTQ files.",
+                    type=argparse.FileType('w'), default=None)
 parser.add_argument("--distances",
-                    help="Write a table of Hamming distances between unique matching groups.",
+                    help="(not functioning) Write a table of Hamming distances between unique matching groups.",
                     action="store_true")
 
 args = parser.parse_args()
@@ -49,6 +52,19 @@ ic(args)
 # ----------------------------------------------------------
 # main
 # ----------------------------------------------------------
+
+
+def dict_to_regex(d):
+    """Return a regex for replacing the tag in modified FASTQ file
+    written by count_regex.py.  E.g. seq_fwd_1=TACCTTG -> oVK790.
+    The dictionary passed in should have a 'name' key and one other
+    key named, for example, 'seq_fwd_1'."""
+    d_copy = d.copy()
+    d_copy.pop('pattern', None)
+    replacement_str = d_copy.pop('name')
+    search_list = [k + '=' + v for k, v in d_copy.items() if k != 'pattern']
+    search_str = ':'.join(search_list)
+    return "s/{}/{}/".format(search_str, replacement_str)
 
 
 def primer_matches(primer_regex, primer_seq, primer_label='', pattern_label=''):
@@ -150,7 +166,14 @@ def main():
         match_writer = csv.DictWriter(args.matches, field_names, dialect="excel-tab")
         match_writer.writeheader()
         match_writer.writerows(match_table)
+
+        for d in match_table:
+            ic(dict_to_regex(d))
         # args.matches.close()
+        if args.sed:
+            for d in match_table:
+                args.sed.write(dict_to_regex(d) + '\n')
+            args.sed.close()
 
     if args.distances:
         fwd_matches = []
@@ -158,22 +181,21 @@ def main():
         fwd_matches.extend([primer_matches(patterns['SEQ_FWD'],
                                            primer_lookup[K]['sequence'],
                                            K, pattern_label='SEQ_FWD')
-                            for K in primer_lookup if primer_lookup[K]['direction']=='F'])
+                            for K in primer_lookup if primer_lookup[K]['direction'] == 'F'])
         rev_matches.extend([primer_matches(patterns['SEQ_REV'],
                                            primer_lookup[K]['sequence'],
                                            K, pattern_label='SEQ_REV')
-                            for K in primer_lookup if primer_lookup[K]['direction']=='R'])
+                            for K in primer_lookup if primer_lookup[K]['direction'] == 'R'])
         ic(fwd_matches, rev_matches)
         fwd_match_dict = {}
         rev_match_dict = {}
         for e in fwd_matches:
             if e is not None:
-                fwd_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name','pattern']])
+                fwd_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name', 'pattern']])
         for e in rev_matches:
             if e is not None:
-                rev_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name','pattern']])
+                rev_match_dict[e['name']] = ''.join([e[k] for k in e if k not in ['name', 'pattern']])
         ic(fwd_match_dict, rev_match_dict)
-
 
 
 if __name__ == '__main__':
