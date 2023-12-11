@@ -25,19 +25,24 @@ echo $BC2RC_NAME"="$BC2RC >&2
 FWDFILE=$(uuidgen).temp
 REVFILE=$(uuidgen).temp
 TEMPFILE=$(uuidgen).temp
-mkfifo $FWDFILE $REVFILE $TEMPFILE
-trap 'rm -f "$TEMPFILE" "$FWDFILE" "$REVFILE"' EXIT
+TEMPFILE2=$(uuidgen).temp
+mkfifo $FWDFILE $REVFILE $TEMPFILE $TEMPFILE2
+trap 'rm -f "$TEMPFILE" "$FWDFILE" "$REVFILE" "$TEMPFILE2"' EXIT
 
 # pull only sequences with the correct forward & reverse primers:
 grep $BC1RC < $3 | grep $BC2 | tee $FWDFILE > $REVFILE &
 grep $BC1 < $3 | grep $BC2RC | tee $FWDFILE > $REVFILE &
 
 # extract barcodes:
-echo "barcode" > $TEMPFILE &
-sed -n -E 's/.*TTCTTGACGAGTTCTTCTGA(.+)ACGCGTCTGGAACAATCAAC.*/\1/p' $FWDFILE >> $TEMPFILE &
-sed -n -E 's/.*GTTGATTGTTCCAGACGCGT(.+)TCAGAAGAACTCGTCAAGAA.*/\1/p' $REVFILE | rcdna >> $TEMPFILE &
+sed -n -E "s/.*TTCTTGACGAGTTCTTCTGA(.+)ACGCGTCTGGAACAATCAAC.*/\1/p" $FWDFILE >> $TEMPFILE &
+# sed -n -E 's/.*TTCTTGACGAGTTCTTCTGA(.+)ACGCGTCTGGAACAATCAAC.*/\1/p' $FWDFILE >> $TEMPFILE &
+sed -n -E "s/.*GTTGATTGTTCCAGACGCGT(.+)TCAGAAGAACTCGTCAAGAA.*/\1/p" $REVFILE | rcdna >> $TEMPFILE &
+
+echo "forward_primer\treverse_primer\tbarcode" > $TEMPFILE2 &
+awk -v fwd=$1 -v rev=$2 'BEGIN {OFS="\t"} {print fwd,rev,$1}' < $TEMPFILE >> $TEMPFILE2 &
 
 # group & count barcodes
-echo "barcode\tcount(barcode)"
-datamash --sort --header-in groupby barcode count barcode < $TEMPFILE | sort -nr -k 2
+echo "forward_primer\treverse_primer\tbarcode\tcount(barcode)"
+# cat $TEMPFILE2 # for testing - skip group & sort
+datamash --sort --header-in groupby forward_primer,reverse_primer,barcode count barcode < $TEMPFILE2 | sort -nr -k 4,4
 
