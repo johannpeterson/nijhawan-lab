@@ -57,7 +57,7 @@ INTERMEDIATE_FILES=$(PATTERNS) $(MATCHES) $(BARCODE_TABLE) $(BARCODE_COUNTS) \
 	$(BARCODE_COUNTS_SAMPLES) $(FLAT_SAMPLES) $(COUNTS) $(FLASH_LOG) \
 	$(MATCHFILE_FWD) $(MATCHFILE_REV) $(MATCHFILE_FWD_RC) $(MATCHFILE_REV_RC) \
 	$(COUNT_REGEX_OUTPUT) $(LOGFILE) $(SED_COMMANDS)
-RESULT_FILES=$(MERGED_READS) $(BARCODE_COUNTS_SAMPLES) $(BARCHARTS) $(TOP_N_FILE) $(NEW_FASTQ)
+RESULT_FILES=$(MERGED_READS) $(BARCODE_COUNTS_SAMPLES) $(BARCHARTS) $(TOP_N_FILE) $(NEW_FASTQ) $(TOP_N_XLSX)
 
 ## all: run all steps necessary to produce the barchart grid (default action)
 all : $(TOP_N_FILE) $(BARCHARTS)
@@ -91,6 +91,7 @@ settings :
 	@echo MERGED_READS: $(MERGED_READS)
 	@echo BARCODE_COUNTS_SAMPLES: $(BARCODE_COUNTS_SAMPLES)
 	@echo TOP_N_FILE: $(TOP_N_FILE)
+	@echo TOP_N_XLSX: $(TOP_N_XLSX)
 	@echo NEW_FASTQ: $(NEW_FASTQ)
 	@echo INTERMEDIATE_FILES: $(INTERMEDIATE_FILES)
 
@@ -161,7 +162,7 @@ $(BARCHARTS) $(TOP_N_FILE) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
 # stderr redirected to a log mostly because there are some annoying layout warnings coming from barchart_grid.py
 
 ## excel: Write the .xlsx file with the top reads for each sample
-excel: $(TOP_N_XLSX)
+excel : $(TOP_N_XLSX)
 
 $(TOP_N_XLSX) : $(BARCODE_COUNTS_SAMPLES)
 	csvtk sort -t -k sample -k frequency:nr $(BARCODE_COUNTS_SAMPLES) | \
