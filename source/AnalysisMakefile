@@ -46,6 +46,7 @@ FLASH_LOG=$(DESTDIR)/$(PREFIX)_flash.log
 BARCHARTS=$(DESTDIR)/$(PREFIX)_barchart.png
 LOGFILE=$(DESTDIR)/$(PREFIX).log
 TOP_N_FILE=$(DESTDIR)/$(PREFIX)_top_$(TOP_N).tsv
+TOP_N_XLSX=$(DESTDIR)/$(PREFIX)_top_$(TOP_N).xlsx
 
 MATCHFILE_FWD=$(DESTDIR)/$(PREFIX)_matchfile_fwd.tsv
 MATCHFILE_REV=$(DESTDIR)/$(PREFIX)_matchfile_rev.tsv
@@ -158,3 +159,11 @@ $(COUNTS) : $(BARCODE_COUNTS_SAMPLES)
 $(BARCHARTS) $(TOP_N_FILE) : $(BARCODE_COUNTS_SAMPLES) $(BARCHART_GRID)
 	$(MAKE_BARCHART) --png $(BARCHARTS) $(BARCODE_COUNTS_SAMPLES) $(TOP_N_FILE) 2>>$(LOGFILE)
 # stderr redirected to a log mostly because there are some annoying layout warnings coming from barchart_grid.py
+
+## excel: Write the .xlsx file with the top reads for each sample
+excel: $(TOP_N_XLSX)
+
+$(TOP_N_XLSX) : $(BARCODE_COUNTS_SAMPLES)
+	csvtk sort -t -k sample -k frequency:nr $(BARCODE_COUNTS_SAMPLES) | \
+	csvtk uniq -t -f sample -n 10 | \
+	csvtk csv2xlsx -t --format-numbers -o $(TOP_N_XLSX)
