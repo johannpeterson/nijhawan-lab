@@ -11,6 +11,10 @@ R1_FILE=$(firstword $(wildcard *_R1_*.fastq.gz))
 R2_FILE=$(firstword $(wildcard *_R2_*.fastq.gz))
 PREFIX=$(firstword $(subst _, ,$(R1_FILE)))
 
+BARCODE_PATTERNS_FILE=./barcode_patterns.py
+PRIMERS_FILE=./primers.txt
+SAMPLES_FILE=./$(PREFIX)_samples.tsv
+
 # executables
 SOURCEDIR=~/bio/nijhawanlab/source
 DESTDIR=./aligned
@@ -24,11 +28,6 @@ FLATTEN_SAMPLES=$(SOURCEDIR)/flatten_samples.py
 FLASH=flash2 -M 230
 BARCHART_GRID=$(SOURCEDIR)/barchart_grid.py
 MAKE_BARCHART=$(BARCHART_GRID) --top $(TOP_N) --experiment $(PREFIX) --control W1 --control W2 --control W3
-
-# input files
-BARCODE_PATTERNS_FILE=./barcode_patterns.py
-PRIMERS_FILE=./primers.txt
-SAMPLES_FILE=./$(PREFIX)_samples.tsv
 
 # Intermediate and result files
 MERGED_READS=$(DESTDIR)/$(PREFIX)_merged.fastq
@@ -99,7 +98,7 @@ settings :
 clean :
 	rm -f $(INTERMEDIATE_FILES)
 
-## cleanall: remove intermediate and results files, incuding the barchard.png and merged.fastq
+## cleanall: remove intermediate and results files, incuding the barchart.png and merged.fastq
 cleanall :
 	rm -f $(INTERMEDIATE_FILES)
 	rm -f $(RESULT_FILES)
