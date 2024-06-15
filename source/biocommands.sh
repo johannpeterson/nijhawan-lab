@@ -13,7 +13,7 @@ rcdna() {rev | tr "AaCcGgTt" "TtGgCcAa" <&0 >&1}
 # convert each series of spaces & tabs to a single tab
 # Not clear why this doesn't work: sed -E 's/[ \t]+$//' -E 's/[ \t]+/\t/g' $1
 cleantsv() {
-    sed -E 's/[ \t]+$//' $1 | sed -E 's/[ \t]+/\t/g'
+    sed -E 's/[[:space:]]+$//' $1 | sed -E 's/[[:blank:]]+/\t/g'
 }
 
 # generate shell variables for the sequences in a primer file
@@ -63,6 +63,7 @@ split_primers() {
 #   pr --sep-string=' | ' -m -T -W 80 <(grep --color=always -e '$' -e $1 $2) <(grep --color=always -e '$' -e $1 $3) |less
 # }
 
+
 # Display corresponding reads side by side, with search sequence highlighted.
 # e.g. pairgrep ACGT R1.fastq R2.fastq
 # pairgrep() {
@@ -74,13 +75,13 @@ pairgrep() {
 }
 
 prettytsv() {
-    if [[ "$#" -eq 0 ]]; then   
+    if [[ "$#" -eq 0 ]]; then
         csvtk pretty -t | less
     else
         csvtk pretty -t $1 | less
     fi
 }
-    
+
 # highlight primers in different colors
 # assumes the presence of four files containing the forward, reverse, reverse compliment forward & reverse primer sequences,
 # as produced by `split_primers`
@@ -128,7 +129,7 @@ function highlight2() {
     fg_color_map[blue]=34
     fg_color_map[magenta]=35
     fg_color_map[cyan]=36
-	 
+
     fg_c=$(echo -e "\e[1;${fg_color_map[$1]}m")
     c_rs=$'\e[0m'
     sed -u -E s"/($2)/$fg_c\1$c_rs/g"
@@ -151,7 +152,7 @@ function highlight() {
     color_map[bold_green]="$(tput setaf 2)""$(tput setbf)"
     color_map[bold_blue]="$(tput setaf 4)""$(tput setbf)"
     color_map[bold_yellow]="$(tput setaf 3)""$(tput setbf)"
-    
+
     fg_c=$color_map[$1]
     c_rs=`tput sgr0`
 
@@ -202,7 +203,7 @@ function count() {
     #for key val in ${(@fkv)pattern_lookup}; do
     #    echo "$key -> $val"
     #done
-    
+
     for key val in ${(@fkv)pattern_lookup}
     do
         cmd="grep --count -E $val $1"
@@ -236,7 +237,7 @@ function pull_seqs () {
     MERGE_FILE=$1"_flash2.fastq"
     OUT_FILE="temp.ala"
     echo "Forward: $FWD_FILE Reverse: $REV_FILE Merged: $MERGE_FILE" >&2
-    
+
     seqkit grep -p $2 $FWD_FILE | seqkit fq2fa -w0 > temp.fasta
     seqkit grep -p $2 $REV_FILE | seqkit seq -r -p -w 0 | seqkit fq2fa -w0 >> temp.fasta
     seqkit grep -p $2 $MERGE_FILE | seqkit fq2fa -w0 >> temp.fasta
