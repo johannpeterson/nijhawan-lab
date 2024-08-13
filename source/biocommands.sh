@@ -59,10 +59,14 @@ split_primers() {
 #
 ########################################
 
+export GREP_OPTIONS="--colour=always"
+
 # pairgrep() {
 #   pr --sep-string=' | ' -m -T -W 80 <(grep --color=always -e '$' -e $1 $2) <(grep --color=always -e '$' -e $1 $3) |less
 # }
 
+
+alias compare='pr -t -m -w 160'
 
 # Display corresponding reads side by side, with search sequence highlighted.
 # e.g. pairgrep ACGT R1.fastq R2.fastq

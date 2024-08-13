@@ -1,6 +1,6 @@
 .PHONY: settings help clean cleanall merge matches
 .ONESHELL:
-SHELL=/bin/zsh
+SHELL=/bin/bash
 
 # use the top N reads to make the bar charts
 TOP_N=10
@@ -16,7 +16,7 @@ PRIMERS_FILE=./primers.txt
 SAMPLES_FILE=./$(PREFIX)_samples.tsv
 
 # executables
-SOURCEDIR=~/bio/nijhawanlab/source
+SOURCEDIR=~/bio/amplicons
 DESTDIR=./aligned
 GET_REGEXES=$(SOURCEDIR)/get_regexes.py
 COUNT_REGEX=$(SOURCEDIR)/count_regex.py
